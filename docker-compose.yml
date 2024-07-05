@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  apirest:
+    image: ${DOCKER_REGISTRY-}apirest
+    build:
+      context: .
+      dockerfile: API REST/Dockerfile

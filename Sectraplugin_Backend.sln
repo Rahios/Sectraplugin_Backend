@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DAL", "DAL\DAL.csproj", "{1
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DTO", "DTO\DTO.csproj", "{4C40F7B7-8755-4A34-B3C3-6EE291EE24E2}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{6DC37E72-D195-4BFC-B289-FB9B8CC50BBA}"
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "project-docker-compose", "project-docker-compose.dcproj", "{6DC37E72-D195-4BFC-B289-FB9B8CC50BBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

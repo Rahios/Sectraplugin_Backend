@@ -7,7 +7,7 @@
     <RootNamespace>API_REST</RootNamespace>
     <UserSecretsId>0cb84927-bff3-4e4a-8ad5-7689cba5cad8</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+    <DockerComposeProjectPath>..\project-docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>

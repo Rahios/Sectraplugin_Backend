@@ -7,6 +7,8 @@ EXPOSE 8081
 # Install OpenSSL for certificate generation
 RUN apt-get update && apt-get install -y openssl
 
+# Add a non-root user and change ownership
+RUN useradd -m appuser && chown -R appuser /app
 
 # Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -32,6 +34,12 @@ COPY --from=publish /app/publish .
 
 # Create directory for certificates
 RUN mkdir /https
+
+# Change ownership of the /https directory
+RUN chown -R appuser /https
+
+# Switch to the non-root user
+USER appuser
 
 # Generate the key and certificate
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /https/aspnetapp.key -out /https/aspnetapp.crt -subj "/CN=localhost"

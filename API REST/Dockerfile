@@ -1,11 +1,14 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
+# Base image for ASP.NET Core
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER app
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+# Install OpenSSL for certificate generation
+RUN apt-get update && apt-get install -y openssl
+
+
+# Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
@@ -22,7 +25,28 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./API REST.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
+# Final image
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Create directory for certificates
+RUN mkdir /https
+
+# Generate the key and certificate
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /https/aspnetapp.key -out /https/aspnetapp.crt -subj "/CN=localhost"
+
+# Export to PFX format
+RUN openssl pkcs12 -export -out /https/aspnetapp.pfx -inkey /https/aspnetapp.key -in /https/aspnetapp.crt -passout pass:password
+
+# Verify that the files exist
+RUN ls -l /https
+
+# Print certificate information for debugging
+RUN openssl pkcs12 -in /https/aspnetapp.pfx -passin pass:password -info -nodes
+
+# Environment variables for ASP.NET Core to use the certificate
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password=password
+
 ENTRYPOINT ["dotnet", "API REST.dll"]

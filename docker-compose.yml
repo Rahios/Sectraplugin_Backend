@@ -10,10 +10,11 @@ services:
         - ASPNETCORE_HTTP_PORTS=8080
         - ASPNETCORE_HTTPS_PORTS=8081
         - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
-        - ASPNETCORE_Kestrel__Certificates__Default__Password=password
+        - ASPNETCORE_Kestrel__Certificates__Default__Password=password #Change this pass here & dockerfile
     ports:
         - "8086:8080"
         - "8087:8081"
     volumes:
         - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
         - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+        - /home/elias/tbSectra/ai/data/tcga/wsi:/home/user/app/data/tcga/wsi

@@ -9,9 +9,9 @@ builder.Services.AddControllers(); // Dependency injection for controllers
 // Register dependencies 
 // DAL
 string imagesDirectoryPath = "/home/user/app/data/tcga/wsi"; // SAME VALUE AS THE ONE IN THE VOLUME OF THE DOCKER-COMPOSE FILE
-builder.Services.AddSingleton<IHistoLungFS>(hfs => new HistoLungFS(imagesDirectoryPath));
+//builder.Services.AddSingleton<IHistoLungFS>(hfs => new HistoLungFS(imagesDirectoryPath));
 // BLL
-builder.Services.AddSingleton<IHistoLungManager, HistoLungManager>(); 
+//builder.Services.AddSingleton<IHistoLungManager, HistoLungManager>(); 
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

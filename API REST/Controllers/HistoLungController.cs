@@ -11,11 +11,11 @@ namespace API_REST.Controllers
 	public class HistoLungController : ControllerBase
 	{
 		// Injection of dependencies in the constructor to use the manager
-		private readonly IHistoLungManager HistoLungManager;
+		private readonly IHistoLungManager _histoLungManager;
 
 		public HistoLungController(IHistoLungManager histoLungManager)
 		{
-			HistoLungManager = histoLungManager;
+			_histoLungManager = histoLungManager;
 		}
 
 
@@ -23,17 +23,18 @@ namespace API_REST.Controllers
 		[HttpGet]
 		public ActionResult<IEnumerable<string>> GetImages()
 		{
-			IEnumerable<string> images = HistoLungManager.ListImageFiles(); 
+			IEnumerable<string> images = _histoLungManager.ListImageFiles(); 
 			return Ok(images);
 		}
 
+		// POST: api/<HistoLungController>
 		[HttpPost]
 		public ActionResult PostImage([FromBody] HistoImage imageHisto)
 		{
 			if (string.IsNullOrEmpty(imageHisto.FileName))
 				return BadRequest("File name is required.");
 
-			var result = HistoLungManager.ProcessImage(imageHisto.FileName);
+			var result = _histoLungManager.ProcessImage(imageHisto.FileName);
 			if (!result)
 				return NotFound("Image not found.");
 
@@ -47,11 +48,7 @@ namespace API_REST.Controllers
 			return "value";
 		}
 
-		// POST api/<HistoLungController>
-		[HttpPost]
-		public void Post([FromBody] string value)
-		{
-		}
+		
 
 		// PUT api/<HistoLungController>/5
 		[HttpPut("{id}")]

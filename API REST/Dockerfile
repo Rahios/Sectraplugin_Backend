@@ -1,6 +1,6 @@
 # Base image for ASP.NET Core
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
+WORKDIR /appBackend
 EXPOSE 8080
 EXPOSE 8081
 
@@ -8,7 +8,7 @@ EXPOSE 8081
 RUN apt-get update && apt-get install -y openssl
 
 # Add a non-root user and change ownership
-RUN useradd -m appuser && chown -R appuser /app
+RUN useradd -m appuser && chown -R appuser /appBackend
 
 # Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -21,16 +21,16 @@ COPY ["DAL/DAL.csproj", "DAL/"]
 RUN dotnet restore "./API REST/API REST.csproj"
 COPY . .
 WORKDIR "/src/API REST"
-RUN dotnet build "./API REST.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./API REST.csproj" -c $BUILD_CONFIGURATION -o /appBackend/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./API REST.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./API REST.csproj" -c $BUILD_CONFIGURATION -o /appBackend/publish /p:UseAppHost=false
 
 # Final image
 FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+WORKDIR /appBackend
+COPY --from=publish /appBackend/publish .
 
 # Create directory for certificates
 RUN mkdir /https

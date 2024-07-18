@@ -8,7 +8,7 @@ builder.Services.AddControllers(); // Dependency injection for controllers
 
 // Register dependencies 
 // DAL
-string imagesDirectoryPath = "/home/user/app/data/tcga/wsi"; // SAME VALUE AS THE ONE IN THE VOLUME OF THE DOCKER-COMPOSE FILE
+string imagesDirectoryPath = "/home/user/appBackend/data/tcga/wsi"; // SAME VALUE AS THE ONE IN THE VOLUME OF THE DOCKER-COMPOSE FILE
 //builder.Services.AddSingleton<IHistoLungFS>(hfs => new HistoLungFS(imagesDirectoryPath));
 // BLL
 //builder.Services.AddSingleton<IHistoLungManager, HistoLungManager>(); 

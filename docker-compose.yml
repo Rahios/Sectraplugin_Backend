@@ -15,6 +15,6 @@ services:
         - "8086:8080"
         - "8087:8081"
     volumes:
-        - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-        - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-        - /home/elias/tbSectra/ai/data/tcga/wsi:/home/user/app/data/tcga/wsi
+        - ${APPDATA}/Microsoft/UserSecrets:/home/appBackend/.microsoft/usersecrets:ro
+        - ${APPDATA}/ASP.NET/Https:/home/appBackend/.aspnet/https:ro
+        - /home/elias/tbSectra/ai/data/tcga/wsi:/home/user/appBackend/data/tcga/wsi

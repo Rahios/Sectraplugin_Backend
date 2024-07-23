@@ -1,17 +1,26 @@
-using BLL;
-using DAL;
+using BLL.Interfaces;
+using BLL.Managers;
+using DAL.FileSystem;
+using DAL.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers(); // Dependency injection for controllers
 
-// Register dependencies 
-// DAL
-string imagesDirectoryPath = "/home/user/appBackend/data/tcga/wsi"; // SAME VALUE AS THE ONE IN THE VOLUME OF THE DOCKER-COMPOSE FILE
-//builder.Services.AddSingleton<IHistoLungFS>(hfs => new HistoLungFS(imagesDirectoryPath));
+// DEPENDENCY INJECTION
+	// Register the manager to be injected in the controllers, and the FS to be injected in the managers
+	// DI makes singleton so the same instance is used in all the controllers that need it (it is not created every time)
 // BLL
-//builder.Services.AddSingleton<IHistoLungManager, HistoLungManager>(); 
+// Register the manager to be injected in the controllers
+builder.Services.AddSingleton<IHelloWorldManager, HelloWorldManager>();
+builder.Services.AddSingleton<ICleanUpManager, CleanUpManager>();
+// DAL
+// Set the file path in the file system to save stuff on the docker volume
+string DirectoryPath = "/home/user/appBackend/"; // LOCATED ON THE DOCKER VOLUME 
+// Register the FS to be injected in the managers
+builder.Services.AddSingleton<IHelloWorldFS>(hfs => new HelloWorldFS(DirectoryPath));
+builder.Services.AddSingleton<ICleanUpFS>(cufs => new CleanUpFS(DirectoryPath));
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

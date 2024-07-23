@@ -7,6 +7,16 @@ EXPOSE 8081
 # Install OpenSSL for certificate generation
 RUN apt-get update && apt-get install -y openssl
 
+# Install necessary dependencies for SkiaSharp
+# These system libraries are required by SkiaSharp to function properly on Linux
+# SkiaSharp is used in the BLL layer to manipulate images
+RUN apt-get update && apt-get install -y \
+    libfontconfig1 \
+    libc-dev \
+    libexpat1 \
+    libuuid1 \
+    zlib1g
+
 # Add a non-root user and change ownership
 RUN useradd -m appuser && chown -R appuser /appBackend
 

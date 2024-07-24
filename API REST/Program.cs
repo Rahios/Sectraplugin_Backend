@@ -15,12 +15,14 @@ builder.Services.AddControllers(); // Dependency injection for controllers
 // Register the manager to be injected in the controllers
 builder.Services.AddSingleton<IHelloWorldManager, HelloWorldManager>();
 builder.Services.AddSingleton<ICleanUpManager, CleanUpManager>();
+builder.Services.AddSingleton<IHistolungManager, HistolungManager>();
 // DAL
 // Set the file path in the file system to save stuff on the docker volume
 string DirectoryPath = "/home/user/appBackend/"; // LOCATED ON THE DOCKER VOLUME 
 // Register the FS to be injected in the managers
 builder.Services.AddSingleton<IHelloWorldFS>(hfs => new HelloWorldFS(DirectoryPath));
 builder.Services.AddSingleton<ICleanUpFS>(cufs => new CleanUpFS(DirectoryPath));
+builder.Services.AddSingleton<IHistolungFS>(hfs => new HistolungFS(DirectoryPath));
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

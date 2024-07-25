@@ -161,8 +161,11 @@ namespace DAL.FileSystem
 			//5)  Recover the prediction and heatmap from the output folder
 			try
 			{
+				// recover image name without extension
+				string imageName = request.ImageName.Split('.')[0];
+
 				response.Prediction = File.ReadAllText($"{outputFolder}/predictions.csv");
-				response.Heatmap = File.ReadAllBytes($"{outputFolder}/heatmap_{request.ImageName}.png");
+				response.Heatmap = File.ReadAllBytes($"{outputFolder}/heatmap_{imageName}.png");
 			}
 			catch (Exception e)
 			{

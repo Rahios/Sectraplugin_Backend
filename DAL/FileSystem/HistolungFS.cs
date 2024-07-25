@@ -31,12 +31,12 @@ namespace DAL.FileSystem
 		// and then re-run the Histolung service
 		public HistolungResponse AnalyzeImage(HistolungRequest request)
 		{
-			// Initialize the response
+			// 1) Initialize the response
 			HistolungResponse response = new HistolungResponse();
 			response.Prediction = "Failure. ";
 			response.Heatmap = Array.Empty<byte>();
 
-			// Verify the paths and folders
+			// 2) Verify the paths and folders
 			try
 			{
 				// Check if the wsi and output folders exist
@@ -60,6 +60,19 @@ namespace DAL.FileSystem
 					response.Prediction += error;
 					throw new Exception(error);
 				}
+
+				// Log permissions and file availability
+				FileInfo fileInfo = new FileInfo(envFilePath);
+				Console.WriteLine($"File exists: {fileInfo.Exists}");
+				Console.WriteLine($"File is read-only: {fileInfo.IsReadOnly}");
+				Console.WriteLine($"File length: {fileInfo.Length}");
+				Console.WriteLine($"File directory: {fileInfo.DirectoryName}");
+
+				using (FileStream fs = fileInfo.Open(FileMode.Open, FileAccess.ReadWrite))
+				{
+					Console.WriteLine($"File can be opened for read/write: {fs.CanWrite}");
+				}
+
 			}
 			catch (Exception e)
 			{
@@ -71,7 +84,7 @@ namespace DAL.FileSystem
 			}
 
 
-			// Update the .env file with the new file name
+			// 3) Update the .env file with the new file name
 			try
 			{
 				string envContent = $"WSI_NAME={request.ImageName}\nSIGMA=8\nTAG=v1.0\nGPU_DEVICE_IDS=0";
@@ -86,7 +99,9 @@ namespace DAL.FileSystem
 				return response;
 			}
 
-			// Run the Histolung service with docker compose up
+			// TODO : Clean the output folder before running the Histolung service
+
+			// 4) Run the Histolung service with docker compose up
 			try
 			{
 				// Prepare the command to run
@@ -125,7 +140,7 @@ namespace DAL.FileSystem
 				return response;
 			}
 
-			// Recover the prediction and heatmap from the output folder
+			//5)  Recover the prediction and heatmap from the output folder
 			try
 			{
 				response.Prediction = File.ReadAllText($"{outputFolder}/predictions.csv");
@@ -139,7 +154,7 @@ namespace DAL.FileSystem
 				return response;
 			}
 
-			// Return the response, wethever it is a success or a failure
+			// 6) Return the response, wethever it is a success or a failure
 			return response;
 		}
 	}

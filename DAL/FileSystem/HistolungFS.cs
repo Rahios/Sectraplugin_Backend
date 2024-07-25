@@ -170,8 +170,20 @@ namespace DAL.FileSystem
 				// recover image name with the extension name ".png" 
 				// Scan the folder for the heatmap image and return the name of it
 				string imageName = Directory.GetFiles(outputFolder, "heatmap_*.png").FirstOrDefault();
+				Console.WriteLine("Image Name : "+imageName);
 
-				byte[] heatmap = File.ReadAllBytes($"{outputFolder}/heatmap_{imageName}.png");
+				// Check if a file was found
+				if (imageName == null)
+				{
+					string message = "No heatmap file found in the output folder.";
+					Console.WriteLine(message);
+					throw new FileNotFoundException(message);
+				}
+
+				// Read the heatmap image as a byte array and return it
+				//byte[] heatmap = File.ReadAllBytes($"{outputFolder}/{imageName}");
+				byte[] heatmap = File.ReadAllBytes(imageName);
+
 				return heatmap;
 			}
 			catch (Exception e)

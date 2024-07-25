@@ -19,4 +19,4 @@ services:
     volumes:
         - ${APPDATA}/Microsoft/UserSecrets:/home/appBackend/.microsoft/usersecrets:ro
         - ${APPDATA}/ASP.NET/Https:/home/appBackend/.aspnet/https:ro
-        - /home/elias/tbSectra/ai/data/tcga/wsi:/home/user/appBackend/data/tcga/wsi
+        

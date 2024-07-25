@@ -17,7 +17,7 @@ namespace DAL.FileSystem
 		private string wsiFolder = "/home/user/appBackend/data/tcga/wsi";
 		private string outputFolder = "/home/user/appBackend/data/outputs";
 		//private string histolungWorkDirPath = "/home/user/appHistolung"; // NE sert a rien, car on n'y a pas accès
-		private string histolungEnvFilePath = "/home/user/appBackend/.env";
+		private string envFilePath = "/home/user/appBackend/.env";
 
 		// C O N S T R U C T O R
 		public HistolungFS(string basePath)
@@ -54,7 +54,7 @@ namespace DAL.FileSystem
 					throw new Exception(error);
 				}	
 				// Check if the .env file exists in the Histolung folder
-				if (!File.Exists(histolungEnvFilePath))
+				if (!File.Exists(envFilePath))
 				{
 					string error = ".env file does not exist.\n";
 					response.Prediction += error;
@@ -76,7 +76,7 @@ namespace DAL.FileSystem
 			{
 				string envContent = $"WSI_NAME={request.ImageName}\nSIGMA=8\nTAG=v1.0\nGPU_DEVICE_IDS=0";
 				// Write the content to the .env file, overwriting the previous content if it exists
-				File.WriteAllText(histolungEnvFilePath, envContent);
+				File.WriteAllText(envFilePath, envContent);
 			}
 			catch (Exception e)
 			{
@@ -92,12 +92,12 @@ namespace DAL.FileSystem
 				// Prepare the command to run
 				ProcessStartInfo processStartInfo = new ProcessStartInfo
 				{
-					FileName = "docker",                            // Command to run
+					FileName = "docker",                           // Command to run
 					Arguments = "compose run hlung",    // Arguments to pass to the command 
 					RedirectStandardOutput = true,          // Redirect the output to the console window
-					RedirectStandardError = true,               // Redirect the error to the console window
-					UseShellExecute = false,                        // Do not use the shell to execute the command
-					CreateNoWindow = true                       // Do not create a window for the command
+					RedirectStandardError = true,              // Redirect the error to the console window
+					UseShellExecute = false,                       // Do not use the shell to execute the command
+					CreateNoWindow = true                      // Do not create a window for the command
 				};
 
 				Console.WriteLine("Running the Histolung service");

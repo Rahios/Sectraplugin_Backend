@@ -1,13 +1,13 @@
 services:
-  apirest:
-    image: ${DOCKER_REGISTRY-}apirest
-    build:
+  apirest: 
+    image: api-rest
+    #build:
     # Construction options. This will build the image from the dockerfile.  
     # Context is where the files to build are. Dockerfile is where this file can be found.
-      context: .
-      dockerfile: API REST/Dockerfile
+    #  context: /home/elias/tbSectra/backend/sectraplugin_backend
+    #  dockerfile: API REST/Dockerfile
     environment:
-    # Environment are .env variables
+    # Environment are the variables that will be used in the container. Replaces the .env file for example.
         - ASPNETCORE_ENVIRONMENT=Development
         - ASPNETCORE_HTTP_PORTS=8080
         - ASPNETCORE_HTTPS_PORTS=8081
@@ -19,4 +19,9 @@ services:
     volumes:
         - ${APPDATA}/Microsoft/UserSecrets:/home/appBackend/.microsoft/usersecrets:ro
         - ${APPDATA}/ASP.NET/Https:/home/appBackend/.aspnet/https:ro
+        - /home/elias/tbSectra/ai/data/tcga:/home/user/appBackend/data/tcga
+        - /home/elias/tbSectra/ai/data/outputs:/home/user/appBackend/data/outputs 
+        - /home/elias/tbSectra/ai/histo_lung/.env:/home/user/appBackend/.env:rw
+        # Need this to execute docker inside the container
+        - /var/run/docker.sock:/var/run/docker.sock
         

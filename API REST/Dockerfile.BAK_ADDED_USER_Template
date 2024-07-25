@@ -7,33 +7,31 @@ EXPOSE 8081
 # Arguments for user and group IDs
 ARG USER_ID
 ARG GROUP_ID
-ARG DOCKER_GID
 
-# Install necessary packages including Docker CLI
+# Install OpenSSL for certificate generation
+RUN apt-get update && apt-get install -y openssl
+
+# Install necessary dependencies for SkiaSharp
+# These system libraries are required by SkiaSharp to function properly on Linux
+# SkiaSharp is used in the BLL layer to manipulate images
 RUN apt-get update && apt-get install -y \
-    openssl \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release \
-    software-properties-common && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && \
-    apt-get install -y docker-ce-cli
+    libfontconfig1 \
+    libc-dev \
+    libexpat1 \
+    libuuid1 \
+    zlib1g
 
+# Add a non-root user and change ownership
+#RUN useradd -m appuser && chown -R appuser /appBackend
 # Add a non-root user and group with specified UID and GID
 RUN addgroup --gid ${GROUP_ID} appgroup && \
-    addgroup --gid ${DOCKER_GID} docker && \
     adduser --uid ${USER_ID} --gid ${GROUP_ID} --disabled-password --gecos "Default user" appuser && \
-    usermod -aG docker appuser && \
     chown -R appuser:appgroup /appBackend
 
 # Create directories for data and output
 RUN mkdir -p /home/user/appBackend/data/tcga && \
-    mkdir -p /home/user/appBackend/data/outputs && \
-    chown -R appuser:appgroup /home/user/appBackend/data
+        mkdir -p /home/user/appBackend/data/outputs && \
+        chown -R appuser:appgroup  /home/user/appBackend/data
 
 # Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -81,5 +79,6 @@ RUN openssl pkcs12 -in /https/aspnetapp.pfx -passin pass:password -info -nodes
 # Environment variables for ASP.NET Core to use the certificate
 ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
 ENV ASPNETCORE_Kestrel__Certificates__Default__Password=password
+
 
 ENTRYPOINT ["dotnet", "API REST.dll"]

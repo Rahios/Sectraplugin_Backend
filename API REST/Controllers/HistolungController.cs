@@ -45,9 +45,25 @@ namespace API_REST.Controllers
 				// Return a complex type (object) as a response to the client. 
 				// The object is serialized into JSON format before sending it to the client. 
 			}
-
-			
 		}
 
+		// 2) Methode pour récupérer l'image heatmap de l'analyse
+		[HttpGet("GetHeatmap")]
+		public IActionResult GetHeatmap()
+		{
+			// 1) Call the manager to get the heatmap
+			byte[] heatmap = _histolungManager.GetHeatmap();
+
+			// 2) Verify if the heatmap was found
+			if (heatmap == null)
+			{
+				return BadRequest("Heatmap not found.");
+			}
+			else
+			{
+				// Return the heatmap as a file to the client (image/png format)
+				return File(heatmap, "image/png", "image.png");	 
+			}
+		}
 	}
 }

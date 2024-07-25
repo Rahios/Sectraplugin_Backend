@@ -101,47 +101,30 @@ namespace DAL.FileSystem
 				return response;
 			}
 
-			// TODO : Clean the output folder before running the Histolung service
-
-			// 4) Run the Histolung service with docker compose up
-
-			/*try
+			// 4) Clean the output folder before running the Histolung service
+			try
 			{
-				// Prepare the command to run
-				ProcessStartInfo processStartInfo = new ProcessStartInfo
+				// Delete all the files in the output folder
+				DirectoryInfo di = new DirectoryInfo(outputFolder);
+				foreach (FileInfo file in di.EnumerateFiles())
 				{
-					FileName = "docker",                           // Command to run
-					Arguments = "compose run hlung",    // Arguments to pass to the command 
-					RedirectStandardOutput = true,          // Redirect the output to the console window
-					RedirectStandardError = true,              // Redirect the error to the console window
-					UseShellExecute = false,                       // Do not use the shell to execute the command
-					CreateNoWindow = true                      // Do not create a window for the command
-				};
-
-				Console.WriteLine("Running the Histolung service");
-				Process process = Process.Start(processStartInfo);
-				process.WaitForExit(); // Wait for the process to finish before continuing
-				Console.WriteLine("Histolung service finished running");
-
-				Console.WriteLine("Reading the output of the Histolung service");
-				Console.WriteLine(process.StandardOutput.ReadToEnd());
-				Console.WriteLine(process.StandardError.ReadToEnd());
-
-				// Check if the process exited with an error
-				if (process.ExitCode != 0)
-				{
-					throw new Exception("Error running the Histolung service");
+					file.Delete();
 				}
-
-
+				foreach (DirectoryInfo dir in di.EnumerateDirectories())
+				{
+					dir.Delete(true);
+				}
 			}
 			catch (Exception e)
 			{
-				string message = "Error running the Histolung service";
+				string message = "Error cleaning the output folder";
 				Console.WriteLine(message + e);
 				response.Prediction += message;
 				return response;
-			}*/
+			}
+
+
+			// 5) Run the Histolung service with docker compose up
 			try
 			{
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
@@ -158,7 +141,7 @@ namespace DAL.FileSystem
 			}
 
 
-			//5)  Recover the prediction and heatmap from the output folder
+			// 6)  Recover the prediction and heatmap from the output folder
 			try
 			{
 				// recover image name without extension
@@ -175,8 +158,28 @@ namespace DAL.FileSystem
 				return response;
 			}
 
-			// 6) Return the response, wethever it is a success or a failure
+			// 7) Return the response, wethever it is a success or a failure
 			return response;
+		}
+
+		// Get the heatmap image from the output folder and return it as a byte array
+		public byte[] GetHeatmap()
+		{
+			try
+			{
+				// recover image name with the extension name ".png" 
+				// Scan the folder for the heatmap image and return the name of it
+				string imageName = Directory.GetFiles(outputFolder, "heatmap_*.png").FirstOrDefault();
+
+				byte[] heatmap = File.ReadAllBytes($"{outputFolder}/heatmap_{imageName}.png");
+				return heatmap;
+			}
+			catch (Exception e)
+			{
+				string message = "Error recovering the prediction and heatmap";
+				Console.WriteLine(message + e);
+				return Array.Empty<byte>();
+			}
 		}
 
 		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container

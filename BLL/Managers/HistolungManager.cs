@@ -26,5 +26,10 @@ namespace BLL.Managers
 		{
 			return _histolungFS.AnalyzeImage(request);
 		}
+
+		public byte[] GetHeatmap()
+		{
+			return _histolungFS.GetHeatmap();
+		}
 	}
 }

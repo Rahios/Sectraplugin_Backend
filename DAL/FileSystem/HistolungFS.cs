@@ -68,7 +68,7 @@ namespace DAL.FileSystem
 			{
 				string envContent = $"WSI_NAME={request.ImageName}\nSIGMA=8\nTAG=v1.0\nGPU_DEVICE_IDS=0";
 				// Write the content to the .env file, overwriting the previous content if it exists
-				File.WriteAllText($"{histolungWorkDirPath}/.env", envContent);
+				File.WriteAllText(histolungEnvFilePath, envContent);
 			}
 			catch (Exception e)
 			{

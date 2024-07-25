@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DAL.Interfaces;
+using Docker.DotNet.Models;
+using Docker.DotNet;
 using DTO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -102,7 +104,8 @@ namespace DAL.FileSystem
 			// TODO : Clean the output folder before running the Histolung service
 
 			// 4) Run the Histolung service with docker compose up
-			try
+
+			/*try
 			{
 				// Prepare the command to run
 				ProcessStartInfo processStartInfo = new ProcessStartInfo
@@ -138,7 +141,19 @@ namespace DAL.FileSystem
 				Console.WriteLine(message + e);
 				response.Prediction += message;
 				return response;
+			}*/
+			try
+			{
+				DockerRestartAsync("hlung").Wait();
 			}
+			catch (Exception e)
+			{
+				string message = "Error running the Histolung service";
+				Console.WriteLine(message + e);
+				response.Prediction += message;
+				return response;
+			}
+
 
 			//5)  Recover the prediction and heatmap from the output folder
 			try
@@ -157,5 +172,33 @@ namespace DAL.FileSystem
 			// 6) Return the response, wethever it is a success or a failure
 			return response;
 		}
-	}
+
+		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
+		private async Task DockerRestartAsync(string containerName)
+		{
+			
+				// Create a Docker client to interact with the Docker daemon on the host machine
+				using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
+				{
+					// List all the containers on the host machine and find the Histolung container by its name
+					var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
+					var container = containers.FirstOrDefault(c => c.Names.Any(n => n.EndsWith(containerName)));
+
+					// Restart the Histolung container if it exists on the host machine
+					if (container != null)
+					{
+						var restartParameters = new ContainerRestartParameters(); 
+						await client.Containers.RestartContainerAsync(container.ID, restartParameters);
+
+						Console.WriteLine("Histolung service restarted");
+					}
+					else
+					{
+						throw new Exception("Histolung container not found");
+					}
+				}
+			}
+			
+		}
+
 }

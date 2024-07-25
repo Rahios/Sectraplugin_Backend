@@ -144,7 +144,10 @@ namespace DAL.FileSystem
 			}*/
 			try
 			{
+				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
 				DockerRestartAsync("hlung").Wait();
+
+				//TODO : Wait que le output sorte après le restart ? 
 			}
 			catch (Exception e)
 			{
@@ -176,22 +179,34 @@ namespace DAL.FileSystem
 		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
 		private async Task DockerRestartAsync(string containerName)
 		{
-			
+			Console.WriteLine("METHOD DockerRestartAsync - Restarting Histolung service");
+
 				// Create a Docker client to interact with the Docker daemon on the host machine
 				using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
 				{
+					Console.WriteLine("Docker client created");
+
 					// List all the containers on the host machine and find the Histolung container by its name
 					var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
 					var container = containers.FirstOrDefault(c => c.Names.Any(n => n.EndsWith(containerName)));
 
+					Console.WriteLine("Histolung container found");
+
 					// Restart the Histolung container if it exists on the host machine
 					if (container != null)
 					{
+						Console.WriteLine("Restarting Histolung service");
 						var restartParameters = new ContainerRestartParameters(); 
 						await client.Containers.RestartContainerAsync(container.ID, restartParameters);
 
 						Console.WriteLine("Histolung service restarted");
-					}
+						Console.WriteLine("Waiting for the container to complete its task");
+
+						// Wait for the container to complete its task
+						await Task.Delay(15000); // Adjust delay as needed, those are milliseconds (15 seconds)
+
+						Console.WriteLine("Container finished its task");
+				}
 					else
 					{
 						throw new Exception("Histolung container not found");

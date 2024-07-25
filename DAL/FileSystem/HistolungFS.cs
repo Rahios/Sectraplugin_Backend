@@ -33,6 +33,7 @@ namespace DAL.FileSystem
 		// and then re-run the Histolung service
 		public HistolungResponse AnalyzeImage(HistolungRequest request)
 		{
+			Console.WriteLine("METHOD AnalyzeImage - Analyzing the image");
 			// 1) Initialize the response
 			HistolungResponse response = new HistolungResponse();
 			response.Prediction = "Failure. ";
@@ -65,10 +66,10 @@ namespace DAL.FileSystem
 
 				// Log permissions and file availability
 				FileInfo fileInfo = new FileInfo(envFilePath);
-				Console.WriteLine($"File exists: {fileInfo.Exists}");
-				Console.WriteLine($"File is read-only: {fileInfo.IsReadOnly}");
-				Console.WriteLine($"File length: {fileInfo.Length}");
-				Console.WriteLine($"File directory: {fileInfo.DirectoryName}");
+				Console.WriteLine($"File .env exists: {fileInfo.Exists}");
+				Console.WriteLine($"File .env is read-only: {fileInfo.IsReadOnly}");
+				Console.WriteLine($"File .env length: {fileInfo.Length}");
+				Console.WriteLine($"File .env directory: {fileInfo.DirectoryName}");
 
 				using (FileStream fs = fileInfo.Open(FileMode.Open, FileAccess.ReadWrite))
 				{
@@ -87,8 +88,10 @@ namespace DAL.FileSystem
 
 
 			// 3) Update the .env file with the new file name
+			// WARNING ! The .env file ressources must be free and not opened by another process
 			try
 			{
+				Console.WriteLine("Updating the .env file with the new image name");
 				string envContent = $"WSI_NAME={request.ImageName}\nSIGMA=8\nTAG=v1.0\nGPU_DEVICE_IDS=0";
 				// Write the content to the .env file, overwriting the previous content if it exists
 				File.WriteAllText(envFilePath, envContent);
@@ -105,13 +108,19 @@ namespace DAL.FileSystem
 			try
 			{
 				// Delete all the files in the output folder
+				Console.WriteLine("Cleaning the output folder");
 				DirectoryInfo di = new DirectoryInfo(outputFolder);
+
+				Console.WriteLine("Number of files in the output folder: " + di.EnumerateFiles().Count());
+
 				foreach (FileInfo file in di.EnumerateFiles())
 				{
+					Console.WriteLine($"Deleting file: {file.Name}");
 					file.Delete();
 				}
 				foreach (DirectoryInfo dir in di.EnumerateDirectories())
 				{
+					Console.WriteLine($"Deleting directory: {dir.Name}");
 					dir.Delete(true);
 				}
 			}
@@ -130,7 +139,6 @@ namespace DAL.FileSystem
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
 				DockerRestartAsync("hlung").Wait();
 
-				//TODO : Wait que le output sorte après le restart ? 
 			}
 			catch (Exception e)
 			{
@@ -145,14 +153,16 @@ namespace DAL.FileSystem
 			try
 			{
 				// recover image name without extension
-				string imageName = request.ImageName.Split('.')[0];
+				string imageName = request.ImageName.Split('.')[0]; 
+				Console.WriteLine("Image Name : "+imageName);
+				Console.WriteLine("Full path for image : "+$"{outputFolder}/heatmap_{imageName}.png");
 
 				response.Prediction = File.ReadAllText($"{outputFolder}/predictions.csv");
 				response.Heatmap = File.ReadAllBytes($"{outputFolder}/heatmap_{imageName}.png");
 			}
 			catch (Exception e)
 			{
-				string message = "Error recovering the prediction and heatmap";
+				string message = "Error recovering the prediction and heatmap.";
 				Console.WriteLine(message + e);
 				response.Prediction += message;
 				return response;

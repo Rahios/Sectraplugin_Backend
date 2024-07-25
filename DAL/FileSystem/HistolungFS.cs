@@ -94,7 +94,10 @@ namespace DAL.FileSystem
 				Console.WriteLine("Updating the .env file with the new image name");
 				string envContent = $"WSI_NAME={request.ImageName}\nSIGMA=8\nTAG=v1.0\nGPU_DEVICE_IDS=0";
 				// Write the content to the .env file, overwriting the previous content if it exists
-				File.WriteAllText(envFilePath, envContent);
+
+				// Read back the content to verify
+				string verifyContent = File.ReadAllText(envFilePath);
+				Console.WriteLine("Updated .env file content :\n" + verifyContent +"\n");
 			}
 			catch (Exception e)
 			{
@@ -110,18 +113,40 @@ namespace DAL.FileSystem
 				// Delete all the files in the output folder
 				Console.WriteLine("Cleaning the output folder");
 				DirectoryInfo di = new DirectoryInfo(outputFolder);
+				FileInfo[] files = di.GetFiles();
+				DirectoryInfo[] directories = di.GetDirectories();
 
-				Console.WriteLine("Number of files in the output folder: " + di.EnumerateFiles().Count());
+				Console.WriteLine("Number of files in the output folder: " + files.Length);
+				Console.WriteLine("Number of directories in the output folder: " + directories.Length);
 
-				foreach (FileInfo file in di.EnumerateFiles())
+				// Delete all the files in the output folder
+				foreach (FileInfo file in files)
 				{
-					Console.WriteLine($"Deleting file: {file.Name}");
-					file.Delete();
+					try
+					{
+						Console.WriteLine($"Deleting file: {file.Name}");
+						file.Delete();
+					}
+					catch (Exception fileEx)
+					{
+						Console.WriteLine($"Error deleting file {file.Name}: {fileEx.Message}");
+						throw;
+					}
 				}
-				foreach (DirectoryInfo dir in di.EnumerateDirectories())
+
+				// Delete all the directories in the output folder
+				foreach (DirectoryInfo dir in directories)
 				{
-					Console.WriteLine($"Deleting directory: {dir.Name}");
-					dir.Delete(true);
+					try
+					{
+						Console.WriteLine($"Deleting directory: {dir.Name}");
+						dir.Delete(true);
+					}
+					catch (Exception dirEx)
+					{
+						Console.WriteLine($"Error deleting directory {dir.Name}: {dirEx.Message}");
+						throw;
+					}
 				}
 			}
 			catch (Exception e)
@@ -153,16 +178,34 @@ namespace DAL.FileSystem
 			try
 			{
 				// recover image name without extension
-				string imageName = request.ImageName.Split('.')[0]; 
-				Console.WriteLine("Image Name : "+imageName);
-				Console.WriteLine("Full path for image : "+$"{outputFolder}/heatmap_{imageName}.png");
+				string imageName		= request.ImageName.Split('.')[0];
+				string heatmapPath		= $"{outputFolder}/heatmap_{imageName}.png";
+				string predictionPath	= $"{outputFolder}/predictions.csv";
 
-				response.Prediction = File.ReadAllText($"{outputFolder}/predictions.csv");
-				response.Heatmap = File.ReadAllBytes($"{outputFolder}/heatmap_{imageName}.png");
+				Console.WriteLine("Image Name: " + imageName);
+				Console.WriteLine("Full path for heatmap: " + heatmapPath);
+
+				// Verify if the prediction file exists
+				if (!File.Exists(predictionPath))
+				{
+					throw new FileNotFoundException("Prediction file not found.", predictionPath);
+				}
+
+				// Verify if the heatmap file exists
+				if (!File.Exists(heatmapPath))
+				{
+					throw new FileNotFoundException("Heatmap file not found.", heatmapPath);
+				}
+
+				// Read the prediction and heatmap files
+				response.Prediction = File.ReadAllText(predictionPath);
+				response.Heatmap = File.ReadAllBytes(heatmapPath);
+
+				Console.WriteLine("Prediction and heatmap successfully recovered.");
 			}
 			catch (Exception e)
 			{
-				string message = "Error recovering the prediction and heatmap.";
+				string message = "Error recovering the prediction and heatmap.\n";
 				Console.WriteLine(message + e);
 				response.Prediction += message;
 				return response;
@@ -175,6 +218,7 @@ namespace DAL.FileSystem
 		// Get the heatmap image from the output folder and return it as a byte array
 		public byte[] GetHeatmap()
 		{
+			Console.WriteLine("METHOD GetHeatmap - Getting the heatmap image");
 			try
 			{
 				// recover image name with the extension name ".png" 

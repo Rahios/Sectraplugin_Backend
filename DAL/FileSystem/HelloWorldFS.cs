@@ -14,7 +14,7 @@ namespace DAL.FileSystem
     public class HelloWorldFS : IHelloWorldFS
 	{
 		// * * * A T T R I B U T E S * * *
-		private string PATH;
+		private string PATH;		// path is (/home/user/appBackend/)
 		private string TxtFilePath   => Path.Combine( PATH, "HelloWorld.txt");
 		private string ImgFilePath => Path.Combine( PATH, "RedBlue.png");
 

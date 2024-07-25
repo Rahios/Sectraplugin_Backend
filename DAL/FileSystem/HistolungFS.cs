@@ -13,9 +13,10 @@ namespace DAL.FileSystem
 	{
 		// A T T R I B U T E S
 		private string backendWorkDirPath; // Path to the working directory ("/home/user/appBackend/")
-		private string wsiFolder = "/home/user/appHistolung/data/tcga/wsi";
-		private string outputFolder = "/home/user/appHistolung/data/outputs";
-		private string histolungWorkDirPath = "/home/user/appHistolung";
+		private string wsiFolder = "/home/user/appBackend/data/tcga/wsi";
+		private string outputFolder = "/home/user/appBackend/data/outputs";
+		//private string histolungWorkDirPath = "/home/user/appHistolung"; // NE sert a rien, car on n'y a pas accès
+		private string histolungEnvFilePath = "/home/user/appHistolung/.env";
 
 		// C O N S T R U C T O R
 		public HistolungFS(string basePath)
@@ -38,10 +39,19 @@ namespace DAL.FileSystem
 			try
 			{
 				// Check if the wsi and output folders exist
-				if (!Directory.Exists(wsiFolder) || !Directory.Exists(outputFolder))
+				if (!Directory.Exists(wsiFolder))
 				{
 					//Directory.CreateDirectory(wsiFolder);
-					throw new Exception("WSI or Output folder does not exist");
+					throw new Exception("WSI folder does not exist");
+				}
+				if(!Directory.Exists(outputFolder))
+				{
+					throw new Exception("Output folder does not exist");
+				}	
+				// Check if the .env file exists in the Histolung folder
+				if (!File.Exists(histolungEnvFilePath))
+				{
+					throw new Exception(".env file does not exist");
 				}
 			}
 			catch (Exception e)

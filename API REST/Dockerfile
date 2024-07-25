@@ -20,6 +20,11 @@ RUN apt-get update && apt-get install -y \
 # Add a non-root user and change ownership
 RUN useradd -m appuser && chown -R appuser /appBackend
 
+# Create directories for data and output
+RUN mkdir -p /home/user/appBackend/data/tcga && \
+        mkdir -p /home/user/appBackend/data/outputs && \
+        chown -R appuser:appuser /home/user/appBackend/data
+
 # Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -66,5 +71,10 @@ RUN openssl pkcs12 -in /https/aspnetapp.pfx -passin pass:password -info -nodes
 # Environment variables for ASP.NET Core to use the certificate
 ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
 ENV ASPNETCORE_Kestrel__Certificates__Default__Password=password
+
+# Ensure the data directories exist and have the right permissions
+RUN mkdir -p /appBackend/data/tcga && \
+        mkdir -p /appBackend/data/outputs && \
+        chown -R appuser:appuser /appBackend/data
 
 ENTRYPOINT ["dotnet", "API REST.dll"]

@@ -4,6 +4,10 @@ WORKDIR /appBackend
 EXPOSE 8080
 EXPOSE 8081
 
+# Arguments for user and group IDs
+ARG USER_ID
+ARG GROUP_ID
+
 # Install OpenSSL for certificate generation
 RUN apt-get update && apt-get install -y openssl
 
@@ -18,12 +22,16 @@ RUN apt-get update && apt-get install -y \
     zlib1g
 
 # Add a non-root user and change ownership
-RUN useradd -m appuser && chown -R appuser /appBackend
+#RUN useradd -m appuser && chown -R appuser /appBackend
+# Add a non-root user and group with specified UID and GID
+RUN addgroup --gid ${GROUP_ID} appgroup && \
+    adduser --uid ${USER_ID} --gid ${GROUP_ID} --disabled-password --gecos "Default user" appuser && \
+    chown -R appuser:appgroup /appBackend
 
 # Create directories for data and output
 RUN mkdir -p /home/user/appBackend/data/tcga && \
         mkdir -p /home/user/appBackend/data/outputs && \
-        chown -R appuser:appuser /home/user/appBackend/data
+        chown -R appuser:appgroup  /home/user/appBackend/data
 
 # Build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -51,7 +59,7 @@ COPY --from=publish /appBackend/publish .
 RUN mkdir /https
 
 # Change ownership of the /https directory
-RUN chown -R appuser /https
+RUN chown -R appuser:appgroup /https
 
 # Switch to the non-root user
 USER appuser
@@ -72,9 +80,5 @@ RUN openssl pkcs12 -in /https/aspnetapp.pfx -passin pass:password -info -nodes
 ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
 ENV ASPNETCORE_Kestrel__Certificates__Default__Password=password
 
-# Ensure the data directories exist and have the right permissions
-#RUN mkdir -p /appBackend/data/tcga && \
- #       mkdir -p /appBackend/data/outputs && \
-  #      chown -R appuser:appuser /appBackend/data
 
 ENTRYPOINT ["dotnet", "API REST.dll"]

@@ -73,8 +73,8 @@ ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
 ENV ASPNETCORE_Kestrel__Certificates__Default__Password=password
 
 # Ensure the data directories exist and have the right permissions
-RUN mkdir -p /appBackend/data/tcga && \
-        mkdir -p /appBackend/data/outputs && \
-        chown -R appuser:appuser /appBackend/data
+#RUN mkdir -p /appBackend/data/tcga && \
+ #       mkdir -p /appBackend/data/outputs && \
+  #      chown -R appuser:appuser /appBackend/data
 
 ENTRYPOINT ["dotnet", "API REST.dll"]

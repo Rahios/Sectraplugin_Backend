@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using DTO;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DAL.FileSystem
 {
@@ -16,7 +17,7 @@ namespace DAL.FileSystem
 		private string wsiFolder = "/home/user/appBackend/data/tcga/wsi";
 		private string outputFolder = "/home/user/appBackend/data/outputs";
 		//private string histolungWorkDirPath = "/home/user/appHistolung"; // NE sert a rien, car on n'y a pas accès
-		private string histolungEnvFilePath = "/home/user/appHistolung/.env";
+		private string histolungEnvFilePath = "/home/user/appBackend/.env";
 
 		// C O N S T R U C T O R
 		public HistolungFS(string basePath)
@@ -42,21 +43,28 @@ namespace DAL.FileSystem
 				if (!Directory.Exists(wsiFolder))
 				{
 					//Directory.CreateDirectory(wsiFolder);
-					throw new Exception("WSI folder does not exist");
+					string error = "WSI folder does not exist.\n";
+					response.Prediction += error;
+					throw new Exception(error);
 				}
 				if(!Directory.Exists(outputFolder))
 				{
-					throw new Exception("Output folder does not exist");
+					string error = "Output folder does not exist.\n";
+					response.Prediction += error;
+					throw new Exception(error);
 				}	
 				// Check if the .env file exists in the Histolung folder
 				if (!File.Exists(histolungEnvFilePath))
 				{
-					throw new Exception(".env file does not exist");
+					string error = ".env file does not exist.\n";
+					response.Prediction += error;
+					throw new Exception(error);
 				}
 			}
 			catch (Exception e)
 			{
-				string message = "Error verifying the paths and folders for /appHistolung/data - OUTPUTS and TCGI/WSI";
+				string message = "Error verifying the paths and folders in the /appBackend/ folder and subfolders." +
+											 "Be sure to run de code in on the server to match the docker-compose volume share and binds.";
 				Console.WriteLine(message + e);
 				response.Prediction += message;
 				return response;

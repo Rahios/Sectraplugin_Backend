@@ -37,6 +37,8 @@ namespace DAL.FileSystem
 		public HistolungResponse AnalyzeImage(HistolungRequest request)
 		{
 			Console.WriteLine("\nMETHOD AnalyzeImage - Analyzing the image");
+			Console.WriteLine("Image Name to analyze : " + request.ImageName);
+
 			// 1) Initialize the response
 			HistolungResponse response = new HistolungResponse();
 			response.Prediction = "Failure. ";
@@ -175,10 +177,7 @@ namespace DAL.FileSystem
 			try
 			{
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
-				//DockerRestartAsync("hlung").Wait();
-				//DockerComposeUpAsync("hlung", projectDirectory).Wait();
-				//DockerComposeUpDownAsync(projectDirectory, 90000).Wait(); // 90 seconds
-				Task task = DockerComposeUpDownAsync(projectDirectory, 90000);
+				Task task = DockerComposeUpDownAsync(projectDirectory, 40000);
 
 				task.Wait(); // Wait for the task to complete before continuing
 				if (task.IsCompleted)
@@ -230,7 +229,7 @@ namespace DAL.FileSystem
 				Console.WriteLine("Files in the output folder:");
 				int counter = 0;
 				if(Directory.GetFiles(outputFolder).Length == 0 ||
-					counter < 6)
+					counter < 11)
 				{
 					Console.WriteLine("No files found in the output folder. Waiting 10 seconds and trying again.");
 					Task.Delay(10000).Wait(); // Wait 10 seconds
@@ -238,8 +237,9 @@ namespace DAL.FileSystem
 				}
 				else
 				{
-					Console.WriteLine("No files found in the output folder after 6 tries. Exiting.");
-					throw new Exception("No files found in the output folder after 6 tries.");
+					Console.WriteLine("No files found in the output folder after 11 tries. Exiting.");
+					response.Prediction += "No files found in the output folder after 11 tries.";
+					throw new Exception("No files found in the output folder after 11 tries.");
 				}
 				foreach (string file in Directory.GetFiles(outputFolder))
 				{
@@ -249,12 +249,14 @@ namespace DAL.FileSystem
 				// Verify if the prediction file exists
 				if (!File.Exists(predictionPath))
 				{
+					response.Prediction += "Prediction file not found at path : " + predictionPath;
 					throw new FileNotFoundException("Prediction file not found.", predictionPath);
 				}
 
 				// Verify if the heatmap file exists
 				if (!File.Exists(heatmapPath))
 				{
+					response.Prediction += "Heatmap file not found at path : " + heatmapPath;
 					throw new FileNotFoundException("Heatmap file not found.", heatmapPath);
 				}
 
@@ -309,111 +311,6 @@ namespace DAL.FileSystem
 			}
 		}
 
-		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
-		private async Task DockerRestartAsync(string containerName)
-		{
-			Console.WriteLine("\nMETHOD DockerRestartAsync - Restarting Histolung service");
-
-				// Create a Docker client to interact with the Docker daemon on the host machine
-				using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
-				{
-					Console.WriteLine("Docker client created");
-
-					// List all the containers on the host machine and find the Histolung container by its name
-					var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
-					var container = containers.FirstOrDefault(c => c.Names.Any(n => n.EndsWith(containerName)));
-
-					Console.WriteLine("Histolung container found");
-
-					// Restart the Histolung container if it exists on the host machine
-					if (container != null)
-					{
-						Console.WriteLine("Restarting Histolung service");
-						var restartParameters = new ContainerRestartParameters(); 
-						await client.Containers.RestartContainerAsync(container.ID, restartParameters);
-
-						Console.WriteLine("Histolung service restarted");
-						Console.WriteLine("Waiting for the container to complete its task");
-
-						// Wait for the container to complete its task
-						await Task.Delay(50000); // Adjust delay as needed, those are milliseconds (50 seconds)
-
-						Console.WriteLine("Container finished its task");
-				}
-					else
-					{
-						throw new Exception("Histolung container not found");
-					}
-				}
-			}
-
-		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
-		// Not a restart, because the restart doesn't read the .env file again
-		// So by doing a compose up, the .env file is read again and the new image is analyzed
-		private async Task DockerComposeUpAsync(string containerName, string projectDirectory)
-		{
-			Console.WriteLine("\nMETHOD DockerComposeUpAsync - Starting Histolung service with docker compose up");
-
-			// Create a Docker client to interact with the Docker daemon on the host machine
-			using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
-			{
-				Console.WriteLine("Docker client created");
-
-				// List all the containers on the host machine and find the Histolung container by its name
-				var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
-				var container = containers.FirstOrDefault(c => c.Names.Any(n => n.Contains(containerName)));
-
-				// Ensure the container is found
-				if (container != null)
-				{
-					Console.WriteLine("Histolung container found");
-
-					// Use the Docker.DotNet API to execute "docker compose up" in the project directory
-					var processStartInfo = new ProcessStartInfo
-					{
-						FileName = "docker",
-						Arguments = "compose -f docker-compose.yml up -d",
-						WorkingDirectory = projectDirectory, // Set the working directory to the project directory containing the docker-compose.yml file
-						RedirectStandardOutput = true,
-						RedirectStandardError = true,
-						UseShellExecute = false,
-						CreateNoWindow = true
-					};
-
-					// Start the process and wait for it to complete
-					using (var process = new Process { StartInfo = processStartInfo })
-					{
-						Console.WriteLine("Starting docker compose up process with the following arguments: " + processStartInfo.Arguments);
-						Console.WriteLine("Working directory: " + processStartInfo.WorkingDirectory);
-						Console.WriteLine("Waiting for the process to complete");
-						process.Start();
-						string output = await process.StandardOutput.ReadToEndAsync();
-						string error = await process.StandardError.ReadToEndAsync();
-						process.WaitForExit();
-
-						Console.WriteLine("Docker compose up output: " + output);
-						if (!string.IsNullOrEmpty(error))
-						{
-							Console.WriteLine("Docker compose up error: " + error);
-						}
-
-						Console.WriteLine("Waiting for the container to complete its task");
-
-						// Wait for the container to complete its task
-						await Task.Delay(50000); // Adjust delay as needed, those are milliseconds (50 seconds)
-
-						Console.WriteLine("Container finished its task");
-
-					}
-
-					Console.WriteLine("Histolung service started with docker compose up");
-				}
-				else
-				{
-					throw new Exception("Histolung container not found");
-				}
-			}
-		}
 
 		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
 		private async Task DockerComposeUpDownAsync(string projectDirectory, int msDelay)
@@ -530,6 +427,117 @@ namespace DAL.FileSystem
 				return false;
 			}
 		}
+
+
+
+		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
+		/*private async Task DockerRestartAsync(string containerName)
+		{
+			Console.WriteLine("\nMETHOD DockerRestartAsync - Restarting Histolung service");
+
+				// Create a Docker client to interact with the Docker daemon on the host machine
+				using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
+				{
+					Console.WriteLine("Docker client created");
+
+					// List all the containers on the host machine and find the Histolung container by its name
+					var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
+					var container = containers.FirstOrDefault(c => c.Names.Any(n => n.EndsWith(containerName)));
+
+					Console.WriteLine("Histolung container found");
+
+					// Restart the Histolung container if it exists on the host machine
+					if (container != null)
+					{
+						Console.WriteLine("Restarting Histolung service");
+						var restartParameters = new ContainerRestartParameters(); 
+						await client.Containers.RestartContainerAsync(container.ID, restartParameters);
+
+						Console.WriteLine("Histolung service restarted");
+						Console.WriteLine("Waiting for the container to complete its task");
+
+						// Wait for the container to complete its task
+						await Task.Delay(50000); // Adjust delay as needed, those are milliseconds (50 seconds)
+
+						Console.WriteLine("Container finished its task");
+				}
+					else
+					{
+						throw new Exception("Histolung container not found");
+					}
+				}
+			}
+		*/
+
+		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
+		// Not a restart, because the restart doesn't read the .env file again
+		// So by doing a compose up, the .env file is read again and the new image is analyzed
+		/*private async Task DockerComposeUpAsync(string containerName, string projectDirectory)
+		{
+			Console.WriteLine("\nMETHOD DockerComposeUpAsync - Starting Histolung service with docker compose up");
+
+			// Create a Docker client to interact with the Docker daemon on the host machine
+			using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
+			{
+				Console.WriteLine("Docker client created");
+
+				// List all the containers on the host machine and find the Histolung container by its name
+				var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
+				var container = containers.FirstOrDefault(c => c.Names.Any(n => n.Contains(containerName)));
+
+				// Ensure the container is found
+				if (container != null)
+				{
+					Console.WriteLine("Histolung container found");
+
+					// Use the Docker.DotNet API to execute "docker compose up" in the project directory
+					var processStartInfo = new ProcessStartInfo
+					{
+						FileName = "docker",
+						Arguments = "compose -f docker-compose.yml up -d",
+						WorkingDirectory = projectDirectory, // Set the working directory to the project directory containing the docker-compose.yml file
+						RedirectStandardOutput = true,
+						RedirectStandardError = true,
+						UseShellExecute = false,
+						CreateNoWindow = true
+					};
+
+					// Start the process and wait for it to complete
+					using (var process = new Process { StartInfo = processStartInfo })
+					{
+						Console.WriteLine("Starting docker compose up process with the following arguments: " + processStartInfo.Arguments);
+						Console.WriteLine("Working directory: " + processStartInfo.WorkingDirectory);
+						Console.WriteLine("Waiting for the process to complete");
+						process.Start();
+						string output = await process.StandardOutput.ReadToEndAsync();
+						string error = await process.StandardError.ReadToEndAsync();
+						process.WaitForExit();
+
+						Console.WriteLine("Docker compose up output: " + output);
+						if (!string.IsNullOrEmpty(error))
+						{
+							Console.WriteLine("Docker compose up error: " + error);
+						}
+
+						Console.WriteLine("Waiting for the container to complete its task");
+
+						// Wait for the container to complete its task
+						await Task.Delay(50000); // Adjust delay as needed, those are milliseconds (50 seconds)
+
+						Console.WriteLine("Container finished its task");
+
+					}
+
+					Console.WriteLine("Histolung service started with docker compose up");
+				}
+				else
+				{
+					throw new Exception("Histolung container not found");
+				}
+			}
+		}
+		*/
+
 
 	}
 

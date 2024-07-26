@@ -98,11 +98,13 @@ namespace DAL.FileSystem
 			{
 				Console.WriteLine("Updating the .env file with the new image name");
 				string envContent = $"WSI_NAME={request.ImageName}\nSIGMA=8\nTAG=v1.0\nGPU_DEVICE_IDS=0";
+				File.WriteAllText(envFilePath, envContent); // Écriture du contenu dans le fichier .env
 				// Write the content to the .env file, overwriting the previous content if it exists
+				Console.WriteLine("What SHOULD BE written in the .env file :\n" + envContent + "\n");
 
 				// Read back the content to verify
 				string verifyContent = File.ReadAllText(envFilePath);
-				Console.WriteLine("\nUpdated .env file content :\n" + verifyContent +"\n");
+				Console.WriteLine("\nACTUAL Updated .env file content :\n" + verifyContent +"\n");
 			}
 			catch (Exception e)
 			{
@@ -177,7 +179,7 @@ namespace DAL.FileSystem
 			try
 			{
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
-				Task task = DockerComposeUpDownAsync(projectDirectory, 40000);
+				Task task = DockerComposeUpDownAsync(projectDirectory, 90000);
 
 				task.Wait(); // Wait for the task to complete before continuing
 				if (task.IsCompleted)
@@ -317,78 +319,25 @@ namespace DAL.FileSystem
 		{
 			Console.WriteLine("\nMETHOD DockerComposeUpDownAsync - Starting and stopping Histolung service with docker compose up and down");
 
-			// Create a Docker client to interact with the Docker daemon on the host machine 
-			using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
-			{
-				Console.WriteLine("Docker client created");
+			Console.WriteLine($"Project directory to execute docker compose commands: {projectDirectory}");
+			Console.WriteLine($"Delay in milliseconds before stopping the service: {msDelay}");
 
-				// 1) Use the Docker.DotNet API to execute "docker compose up" in the project directory
-				var upProcessStartInfo = new ProcessStartInfo
-				{
-					FileName = "docker",
-					Arguments = "compose up -d",
-					WorkingDirectory = projectDirectory,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				};
+			// Docker compose down
+			//string downOutput1 = await RunCommand("docker", "compose down", projectDirectory);
+			//Console.WriteLine($"Docker compose down output: {downOutput1}");
 
-				// 2) Start the process and wait for it to complete
-				using (var upProcess = new Process { StartInfo = upProcessStartInfo })
-				{
-					Console.WriteLine("Starting docker compose up process with the following arguments: \n" + upProcessStartInfo.Arguments);
-					Console.WriteLine("Working directory: " + upProcessStartInfo.WorkingDirectory);
-					upProcess.Start();
-					string upOutput = await upProcess.StandardOutput.ReadToEndAsync();
-					string upError = await upProcess.StandardError.ReadToEndAsync();
-					upProcess.WaitForExit();
+			// Docker compose up
+			string upOutput = await RunCommand("docker", "compose up -d", projectDirectory);
+			Console.WriteLine($"Docker compose up output: {upOutput}");
 
-					Console.WriteLine("Docker compose up output: " + upOutput);
-					if (!string.IsNullOrEmpty(upError))
-					{
-						Console.WriteLine("Docker compose up error: " + upError);
-					}
+			// Wait for the container to finish its task
+			await Task.Delay(msDelay);
 
-					// Adjust delay as needed to wait on the container histolung to finish, those are milliseconds
-					await Task.Delay(msDelay); // TODO : Remplace this with accurate values / process.
-
-					Console.WriteLine("Docker compose up completed");
-				}
-
-				// 3) Use the Docker.DotNet API to execute "docker-compose down" in the project directory
-				/*var downProcessStartInfo = new ProcessStartInfo
-				{
-					FileName = "docker",
-					Arguments = "compose down",
-					WorkingDirectory = projectDirectory,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				};
-
-				// 4) Start the process and wait for it to complete
-				using (var downProcess = new Process { StartInfo = downProcessStartInfo })
-				{
-					Console.WriteLine("Starting docker compose down process with the following arguments: " + downProcessStartInfo.Arguments);
-					Console.WriteLine("Working directory: " + downProcessStartInfo.WorkingDirectory);
-					downProcess.Start();
-					string downOutput = await downProcess.StandardOutput.ReadToEndAsync();
-					string downError = await downProcess.StandardError.ReadToEndAsync();
-					downProcess.WaitForExit();
-
-					Console.WriteLine("Docker compose down output: " + downOutput);
-					if (!string.IsNullOrEmpty(downError))
-					{
-						Console.WriteLine("Docker compose down error: " + downError);
-					}
-
-					Console.WriteLine("Docker compose down completed");
-				}
-				*/
-			}
+			// Docker compose down
+			//string downOutput2 = await RunCommand("docker", "compose down", projectDirectory);
+			//Console.WriteLine($"Docker compose down output: {downOutput2}");
 		}
+
 
 		// Check if the current user has the specified access rights to the specified directory path (unix / linux)
 		private static bool HasDirectoryAccessRights(string folderPath, string permission)
@@ -428,6 +377,40 @@ namespace DAL.FileSystem
 			}
 		}
 
+
+		// Run a command in the specified working directory and return the output
+		private async Task<string> RunCommand(string fileName, string arguments, string workingDirectory)
+		{
+			Console.WriteLine($"\nMETHOD RunCommand - Running command: {fileName} {arguments} in {workingDirectory}");
+			var processStartInfo = new ProcessStartInfo
+			{
+				FileName = fileName,
+				Arguments = arguments,
+				WorkingDirectory = workingDirectory,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
+
+			using (var process = new Process { StartInfo = processStartInfo })
+			{
+				Console.WriteLine($"Running command: {fileName} {arguments} in {workingDirectory}");
+				process.Start();
+
+				string output = await process.StandardOutput.ReadToEndAsync();
+				string error = await process.StandardError.ReadToEndAsync();
+				process.WaitForExit();
+
+				Console.Write("Command output: " + output);
+				if (!string.IsNullOrEmpty(error))
+				{
+					Console.WriteLine($"Error running command: {error}");
+				}
+				
+				return output;
+			}
+		}
 
 	}
 

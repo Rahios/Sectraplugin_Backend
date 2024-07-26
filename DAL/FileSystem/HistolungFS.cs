@@ -114,7 +114,7 @@ namespace DAL.FileSystem
 			try
 			{
 				// Verify if my access rights are correct to delete files in the output folder
-				if (!HasDirectoryAccessRights(outputFolder, FileSystemRights.DeleteSubdirectoriesAndFiles))
+				if (!HasDirectoryAccessRights(outputFolder, "w"))
 				{
 					string message = "Error verifying the access rights to the output folder.";
 					Console.WriteLine(message);
@@ -481,44 +481,43 @@ namespace DAL.FileSystem
 		}
 
 		// Check if the current user has the specified access rights to the specified directory path (unix / linux)
-		private static bool HasDirectoryAccessRights(string folderPath, FileSystemRights right)
+		private static bool HasDirectoryAccessRights(string folderPath, string permission)
 		{
-			Console.WriteLine("METHOD HasDirectoryAccessRights - Checking access rights to the output folder" +folderPath+" - with the rights - "+ right);
+			Console.WriteLine($"METHOD HasDirectoryAccessRights - Checking access rights to the output folder {folderPath} with the rights {permission}");
 			try
 			{
-				// Get the current user's identity
-				var user = Environment.UserName;
+				// Construct the command to check directory permissions
+				var command = $"test -{permission} {folderPath} && echo 'yes' || echo 'no'";
 
-				// Get the directory info
-				var directoryInfo = new DirectoryInfo(folderPath);
-
-				// Check if the directory exists
-				if (!directoryInfo.Exists)
+				// Create a process to run the command
+				var process = new Process
 				{
-					Console.WriteLine($"Directory {folderPath} does not exist.");
-					return false;
-				}
-
-				// Check if the user has the specified access rights
-				var accessRights = directoryInfo.GetAccessControl().GetAccessRules(true, true, typeof(NTAccount));
-
-				foreach (FileSystemAccessRule rule in accessRights)
-				{
-					if (rule.IdentityReference.Value.Equals(user, StringComparison.CurrentCultureIgnoreCase) &&
-						(rule.FileSystemRights & right) == right)
+					StartInfo = new ProcessStartInfo
 					{
-						Console.WriteLine($"User {user} has the specified access rights to the directory {folderPath}");
-						return true;
+						FileName = "sh",
+						Arguments = $"-c \"{command}\"",
+						RedirectStandardOutput = true,
+						UseShellExecute = false,
+						CreateNoWindow = true
 					}
-				}
+				};
+
+				// Start the process and read the output
+				process.Start();
+				string result = process.StandardOutput.ReadToEnd().Trim();
+				process.WaitForExit();
+
+				// Return true if the command output is 'yes', otherwise false
+				Console.WriteLine($"Access rights to the output folder {folderPath} with the rights {permission} : {result}");
+				return result == "yes";
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Error checking access rights: {ex.Message}");
+				return false;
 			}
-
-			return false;
 		}
+
 	}
 
 }

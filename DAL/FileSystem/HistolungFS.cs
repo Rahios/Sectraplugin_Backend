@@ -164,7 +164,8 @@ namespace DAL.FileSystem
 			{
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
 				//DockerRestartAsync("hlung").Wait();
-				DockerComposeUpAsync("hlung", projectDirectory).Wait();
+				//DockerComposeUpAsync("hlung", projectDirectory).Wait();
+				DockerComposeUpDownAsync(projectDirectory, 50000).Wait();
 
 			}
 			catch (Exception e)
@@ -359,6 +360,81 @@ namespace DAL.FileSystem
 				else
 				{
 					throw new Exception("Histolung container not found");
+				}
+			}
+		}
+
+		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
+		private async Task DockerComposeUpDownAsync(string projectDirectory, int msDelay)
+		{
+			Console.WriteLine("METHOD DockerComposeUpDownAsync - Starting and stopping Histolung service with docker compose up and down");
+
+			using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
+			{
+				Console.WriteLine("Docker client created");
+
+				// 1) Use the Docker.DotNet API to execute "docker-compose up" in the project directory
+				var upProcessStartInfo = new ProcessStartInfo
+				{
+					FileName = "docker",
+					Arguments = "compose up -d",
+					WorkingDirectory = projectDirectory,
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					UseShellExecute = false,
+					CreateNoWindow = true
+				};
+
+				// 2) Start the process and wait for it to complete
+				using (var upProcess = new Process { StartInfo = upProcessStartInfo })
+				{
+					Console.WriteLine("Starting docker compose up process with the following arguments: " + upProcessStartInfo.Arguments);
+					Console.WriteLine("Working directory: " + upProcessStartInfo.WorkingDirectory);
+					upProcess.Start();
+					string upOutput = await upProcess.StandardOutput.ReadToEndAsync();
+					string upError = await upProcess.StandardError.ReadToEndAsync();
+					upProcess.WaitForExit();
+
+					Console.WriteLine("Docker compose up output: " + upOutput);
+					if (!string.IsNullOrEmpty(upError))
+					{
+						Console.WriteLine("Docker compose up error: " + upError);
+					}
+
+					await Task.Delay(msDelay); // Adjust delay as needed, those are milliseconds (50 seconds)
+
+					Console.WriteLine("Docker compose up completed");
+				}
+
+				// 3) Use the Docker.DotNet API to execute "docker-compose down" in the project directory
+				var downProcessStartInfo = new ProcessStartInfo
+				{
+					FileName = "docker",
+					Arguments = "compose down",
+					WorkingDirectory = projectDirectory,
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					UseShellExecute = false,
+					CreateNoWindow = true
+				};
+
+				// 4) Start the process and wait for it to complete
+				using (var downProcess = new Process { StartInfo = downProcessStartInfo })
+				{
+					Console.WriteLine("Starting docker compose down process with the following arguments: " + downProcessStartInfo.Arguments);
+					Console.WriteLine("Working directory: " + downProcessStartInfo.WorkingDirectory);
+					downProcess.Start();
+					string downOutput = await downProcess.StandardOutput.ReadToEndAsync();
+					string downError = await downProcess.StandardError.ReadToEndAsync();
+					downProcess.WaitForExit();
+
+					Console.WriteLine("Docker compose down output: " + downOutput);
+					if (!string.IsNullOrEmpty(downError))
+					{
+						Console.WriteLine("Docker compose down error: " + downError);
+					}
+
+					Console.WriteLine("Docker compose down completed");
 				}
 			}
 		}

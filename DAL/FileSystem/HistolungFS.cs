@@ -480,43 +480,36 @@ namespace DAL.FileSystem
 			}
 		}
 
-		// Check if the current user has the specified access rights to the specified directory path
+		// Check if the current user has the specified access rights to the specified directory path (unix / linux)
 		private static bool HasDirectoryAccessRights(string folderPath, FileSystemRights right)
 		{
+			Console.WriteLine("METHOD HasDirectoryAccessRights - Checking access rights to the output folder" +folderPath+" - with the rights - "+ right);
 			try
 			{
-				// Get the access control list (ACL) for the directory and check if the current user has the specified access rights
-				DirectoryInfo di = new DirectoryInfo(folderPath);
-				AuthorizationRuleCollection acl = di.GetAccessControl().GetAccessRules(true, true, typeof(NTAccount));
-				WindowsIdentity identity = WindowsIdentity.GetCurrent();
+				// Get the current user's identity
+				var user = Environment.UserName;
 
-				Console.WriteLine($"Current user: {identity.Name} rights on the folder {folderPath} :");
-				foreach (AuthorizationRule rule in acl)
+				// Get the directory info
+				var directoryInfo = new DirectoryInfo(folderPath);
+
+				// Check if the directory exists
+				if (!directoryInfo.Exists)
 				{
-					FileSystemAccessRule fsAccessRule = rule as FileSystemAccessRule;
-					if (fsAccessRule == null)
-						continue;
+					Console.WriteLine($"Directory {folderPath} does not exist.");
+					return false;
+				}
 
-					if ((fsAccessRule.FileSystemRights & right) != right)
-						continue;
+				// Check if the user has the specified access rights
+				var accessRights = directoryInfo.GetAccessControl().GetAccessRules(true, true, typeof(NTAccount));
 
-					if (fsAccessRule.IdentityReference.Value.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase))
+				foreach (FileSystemAccessRule rule in accessRights)
+				{
+					if (rule.IdentityReference.Value.Equals(user, StringComparison.CurrentCultureIgnoreCase) &&
+						(rule.FileSystemRights & right) == right)
 					{
-						if (fsAccessRule.AccessControlType == AccessControlType.Allow)
-						{
-							Console.WriteLine($"User has the right {right} on the folder {folderPath}");
-							Console.WriteLine($"Access type: {fsAccessRule.AccessControlType}");
-							return true;
-						}
-						else if (fsAccessRule.AccessControlType == AccessControlType.Deny)
-						{
-							Console.WriteLine($"User has been denied the right {right} on the folder {folderPath}");
-							Console.WriteLine($"Access type: {fsAccessRule.AccessControlType}");
-							return false;
-						}
-							
+						Console.WriteLine($"User {user} has the specified access rights to the directory {folderPath}");
+						return true;
 					}
-					
 				}
 			}
 			catch (Exception ex)

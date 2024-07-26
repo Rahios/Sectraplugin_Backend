@@ -9,6 +9,8 @@ using Docker.DotNet.Models;
 using Docker.DotNet;
 using DTO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace DAL.FileSystem
 {
@@ -98,7 +100,7 @@ namespace DAL.FileSystem
 
 				// Read back the content to verify
 				string verifyContent = File.ReadAllText(envFilePath);
-				Console.WriteLine("Updated .env file content :\n" + verifyContent +"\n");
+				Console.WriteLine("\nUpdated .env file content :\n" + verifyContent +"\n");
 			}
 			catch (Exception e)
 			{
@@ -111,6 +113,16 @@ namespace DAL.FileSystem
 			// 4) Clean the output folder before running the Histolung service
 			try
 			{
+				// Verify if my access rights are correct to delete files in the output folder
+				if (!HasDirectoryAccessRights(outputFolder, FileSystemRights.DeleteSubdirectoriesAndFiles))
+				{
+					string message = "Error verifying the access rights to the output folder.";
+					Console.WriteLine(message);
+					response.Prediction += message;
+					return response;
+				}
+
+
 				// Delete all the files in the output folder
 				Console.WriteLine("Cleaning the output folder");
 				DirectoryInfo di = new DirectoryInfo(outputFolder);
@@ -165,8 +177,34 @@ namespace DAL.FileSystem
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
 				//DockerRestartAsync("hlung").Wait();
 				//DockerComposeUpAsync("hlung", projectDirectory).Wait();
-				DockerComposeUpDownAsync(projectDirectory, 50000).Wait();
+				//DockerComposeUpDownAsync(projectDirectory, 90000).Wait(); // 90 seconds
+				Task task = DockerComposeUpDownAsync(projectDirectory, 90000);
 
+				task.Wait(); // Wait for the task to complete before continuing
+				if (task.IsCompleted)
+				{
+					// Means that the task completed, faulted, or was canceled
+					Console.WriteLine("DockerComposeUpDownAsync completed");
+				}
+				else if (task.IsCompletedSuccessfully)
+				{
+					// Means that the task completed successfully without throwing an exception
+					Console.WriteLine("DockerComposeUpDownAsync completed successfully");
+				}
+				else if (task.IsCanceled)
+				{
+					// Means that the task was canceled before it completed
+					Console.WriteLine("DockerComposeUpDownAsync canceled");
+				}
+				else if (task.IsFaulted)
+				{
+					// Means that an exception was thrown during the execution of the task
+					Console.WriteLine("DockerComposeUpDownAsync faulted");
+					if (task.Exception != null)
+					{
+						Console.WriteLine("Exception: " + task.Exception.GetBaseException().Message);
+					}
+				}
 			}
 			catch (Exception e)
 			{
@@ -369,11 +407,12 @@ namespace DAL.FileSystem
 		{
 			Console.WriteLine("METHOD DockerComposeUpDownAsync - Starting and stopping Histolung service with docker compose up and down");
 
+			// Create a Docker client to interact with the Docker daemon on the host machine 
 			using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
 			{
 				Console.WriteLine("Docker client created");
 
-				// 1) Use the Docker.DotNet API to execute "docker-compose up" in the project directory
+				// 1) Use the Docker.DotNet API to execute "docker compose up" in the project directory
 				var upProcessStartInfo = new ProcessStartInfo
 				{
 					FileName = "docker",
@@ -388,7 +427,7 @@ namespace DAL.FileSystem
 				// 2) Start the process and wait for it to complete
 				using (var upProcess = new Process { StartInfo = upProcessStartInfo })
 				{
-					Console.WriteLine("Starting docker compose up process with the following arguments: " + upProcessStartInfo.Arguments);
+					Console.WriteLine("Starting docker compose up process with the following arguments: \n" + upProcessStartInfo.Arguments);
 					Console.WriteLine("Working directory: " + upProcessStartInfo.WorkingDirectory);
 					upProcess.Start();
 					string upOutput = await upProcess.StandardOutput.ReadToEndAsync();
@@ -401,13 +440,14 @@ namespace DAL.FileSystem
 						Console.WriteLine("Docker compose up error: " + upError);
 					}
 
-					await Task.Delay(msDelay); // Adjust delay as needed, those are milliseconds (50 seconds)
+					// Adjust delay as needed to wait on the container histolung to finish, those are milliseconds
+					await Task.Delay(msDelay); // TODO : Remplace this with accurate values / process.
 
 					Console.WriteLine("Docker compose up completed");
 				}
 
 				// 3) Use the Docker.DotNet API to execute "docker-compose down" in the project directory
-				var downProcessStartInfo = new ProcessStartInfo
+				/*var downProcessStartInfo = new ProcessStartInfo
 				{
 					FileName = "docker",
 					Arguments = "compose down",
@@ -436,9 +476,56 @@ namespace DAL.FileSystem
 
 					Console.WriteLine("Docker compose down completed");
 				}
+				*/
 			}
 		}
 
+		// Check if the current user has the specified access rights to the specified directory path
+		private static bool HasDirectoryAccessRights(string folderPath, FileSystemRights right)
+		{
+			try
+			{
+				// Get the access control list (ACL) for the directory and check if the current user has the specified access rights
+				DirectoryInfo di = new DirectoryInfo(folderPath);
+				AuthorizationRuleCollection acl = di.GetAccessControl().GetAccessRules(true, true, typeof(NTAccount));
+				WindowsIdentity identity = WindowsIdentity.GetCurrent();
+
+				Console.WriteLine($"Current user: {identity.Name} rights on the folder {folderPath} :");
+				foreach (AuthorizationRule rule in acl)
+				{
+					FileSystemAccessRule fsAccessRule = rule as FileSystemAccessRule;
+					if (fsAccessRule == null)
+						continue;
+
+					if ((fsAccessRule.FileSystemRights & right) != right)
+						continue;
+
+					if (fsAccessRule.IdentityReference.Value.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase))
+					{
+						if (fsAccessRule.AccessControlType == AccessControlType.Allow)
+						{
+							Console.WriteLine($"User has the right {right} on the folder {folderPath}");
+							Console.WriteLine($"Access type: {fsAccessRule.AccessControlType}");
+							return true;
+						}
+						else if (fsAccessRule.AccessControlType == AccessControlType.Deny)
+						{
+							Console.WriteLine($"User has been denied the right {right} on the folder {folderPath}");
+							Console.WriteLine($"Access type: {fsAccessRule.AccessControlType}");
+							return false;
+						}
+							
+					}
+					
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error checking access rights: {ex.Message}");
+			}
+
+			return false;
+		}
 	}
 
 }

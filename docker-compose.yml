@@ -19,10 +19,12 @@ services:
     volumes:
         - ${APPDATA}/Microsoft/UserSecrets:/home/appBackend/.microsoft/usersecrets:ro
         - ${APPDATA}/ASP.NET/Https:/home/appBackend/.aspnet/https:ro
+        # folder to acces histopathological images
         - /home/elias/tbSectra/ai/data/tcga:/home/user/appBackend/data/tcga
         - /home/elias/tbSectra/ai/data/outputs:/home/user/appBackend/data/outputs 
         # Folder to acces the "docker-compose.yml" to restart the container histolung from inside the container api-rest
         - /home/elias/tbSectra/ai/histo_lung:/home/user/appBackend/histo_lung  
+        # file acces to the .env file from the container to update it
         - /home/elias/tbSectra/ai/histo_lung/.env:/home/user/appBackend/.env:rw
         # Need this to execute docker inside the container
         - /var/run/docker.sock:/var/run/docker.sock

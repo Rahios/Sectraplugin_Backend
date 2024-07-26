@@ -36,7 +36,7 @@ namespace DAL.FileSystem
 		// and then re-run the Histolung service
 		public HistolungResponse AnalyzeImage(HistolungRequest request)
 		{
-			Console.WriteLine("METHOD AnalyzeImage - Analyzing the image");
+			Console.WriteLine("\nMETHOD AnalyzeImage - Analyzing the image");
 			// 1) Initialize the response
 			HistolungResponse response = new HistolungResponse();
 			response.Prediction = "Failure. ";
@@ -226,8 +226,21 @@ namespace DAL.FileSystem
 				Console.WriteLine("Image Name: " + imageName);
 				Console.WriteLine("Full path for heatmap: " + heatmapPath);
 
-				// Verify the filenames of output folder
+				// Verify the filenames of output folder. If there are no files in the folder, wait a bit and try again. Only 6 times.
 				Console.WriteLine("Files in the output folder:");
+				int counter = 0;
+				if(Directory.GetFiles(outputFolder).Length == 0 ||
+					counter < 6)
+				{
+					Console.WriteLine("No files found in the output folder. Waiting 10 seconds and trying again.");
+					Task.Delay(10000).Wait(); // Wait 10 seconds
+					counter++;
+				}
+				else
+				{
+					Console.WriteLine("No files found in the output folder after 6 tries. Exiting.");
+					throw new Exception("No files found in the output folder after 6 tries.");
+				}
 				foreach (string file in Directory.GetFiles(outputFolder))
 				{
 					Console.WriteLine(file);
@@ -266,7 +279,7 @@ namespace DAL.FileSystem
 		// Get the heatmap image from the output folder and return it as a byte array
 		public byte[] GetHeatmap()
 		{
-			Console.WriteLine("METHOD GetHeatmap - Getting the heatmap image");
+			Console.WriteLine("\nMETHOD GetHeatmap - Getting the heatmap image");
 			try
 			{
 				// recover image name with the extension name ".png" 
@@ -299,7 +312,7 @@ namespace DAL.FileSystem
 		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
 		private async Task DockerRestartAsync(string containerName)
 		{
-			Console.WriteLine("METHOD DockerRestartAsync - Restarting Histolung service");
+			Console.WriteLine("\nMETHOD DockerRestartAsync - Restarting Histolung service");
 
 				// Create a Docker client to interact with the Docker daemon on the host machine
 				using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
@@ -339,7 +352,7 @@ namespace DAL.FileSystem
 		// So by doing a compose up, the .env file is read again and the new image is analyzed
 		private async Task DockerComposeUpAsync(string containerName, string projectDirectory)
 		{
-			Console.WriteLine("METHOD DockerComposeUpAsync - Starting Histolung service with docker compose up");
+			Console.WriteLine("\nMETHOD DockerComposeUpAsync - Starting Histolung service with docker compose up");
 
 			// Create a Docker client to interact with the Docker daemon on the host machine
 			using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
@@ -405,7 +418,7 @@ namespace DAL.FileSystem
 		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
 		private async Task DockerComposeUpDownAsync(string projectDirectory, int msDelay)
 		{
-			Console.WriteLine("METHOD DockerComposeUpDownAsync - Starting and stopping Histolung service with docker compose up and down");
+			Console.WriteLine("\nMETHOD DockerComposeUpDownAsync - Starting and stopping Histolung service with docker compose up and down");
 
 			// Create a Docker client to interact with the Docker daemon on the host machine 
 			using (var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient())
@@ -483,7 +496,7 @@ namespace DAL.FileSystem
 		// Check if the current user has the specified access rights to the specified directory path (unix / linux)
 		private static bool HasDirectoryAccessRights(string folderPath, string permission)
 		{
-			Console.WriteLine($"METHOD HasDirectoryAccessRights - Checking access rights to the output folder {folderPath} with the rights {permission}");
+			Console.WriteLine($"\nMETHOD HasDirectoryAccessRights - Checking access rights to the output folder {folderPath} with the rights {permission}");
 			try
 			{
 				// Construct the command to check directory permissions

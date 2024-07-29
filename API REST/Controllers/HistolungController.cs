@@ -1,5 +1,6 @@
 ﻿using BLL.Interfaces;
 using DTO;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace API_REST.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
+	[EnableCors("AllowSpecificOrigin")]			// Enable CORS (Cross-Origin Resource Sharing) for the controller (for all the methods in the controller) 
 	public class HistolungController : ControllerBase
 	{
 		// A T T R I B U T E S

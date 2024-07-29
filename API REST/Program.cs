@@ -8,9 +8,22 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers(); // Dependency injection for controllers
 
+// Configure CORS (Cross-Origin Resource Sharing) to allow the frontend to access the backend
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowSpecificOrigin",  // Name of the policy to be used in the controller to enable CORS
+		builder =>
+		{
+			builder.WithOrigins("https://153.109.124.207") 
+				   .AllowAnyHeader()
+				   .AllowAnyMethod();
+		});
+});
+
+
 // DEPENDENCY INJECTION
-	// Register the manager to be injected in the controllers, and the FS to be injected in the managers
-	// DI makes singleton so the same instance is used in all the controllers that need it (it is not created every time)
+// Register the manager to be injected in the controllers, and the FS to be injected in the managers
+// DI makes singleton so the same instance is used in all the controllers that need it (it is not created every time)
 // BLL
 // Register the manager to be injected in the controllers
 builder.Services.AddSingleton<IHelloWorldManager, HelloWorldManager>();
@@ -39,6 +52,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Use CORS middleware
+app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthorization();
 

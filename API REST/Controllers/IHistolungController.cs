@@ -15,7 +15,7 @@ namespace API_REST.Controllers
 		/// Can take a while to process. Around 1 min 30 sec minimum to 3 min 30 sec maximum.
 		/// </summary>
 		/// <param name="request">The request containing the image name as a ".tif" file to analyze</param>
-		/// <returns>The anaéysis of the result containing the prediction and the heatmap of the analysis</returns>
+		/// <returns>The analysis of the result containing the prediction and the heatmap of the analysis</returns>
 		IActionResult AnalyseImage([FromBody] HistolungRequest request);
 
 		/// <summary>

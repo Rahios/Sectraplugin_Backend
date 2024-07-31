@@ -16,6 +16,10 @@ namespace API_REST.Controllers
 		private readonly IHistolungManager _histolungManager;
 
 		// C O N S T R U C T O R
+		/// <summary>
+		/// Constructor of the Histolung controller to inject the Histolung manager
+		/// </summary>
+		/// <param name="histolungManager"></param>
 		public HistolungController(IHistolungManager histolungManager)
 		{
 			_histolungManager = histolungManager;

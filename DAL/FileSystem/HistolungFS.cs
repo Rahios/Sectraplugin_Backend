@@ -42,7 +42,7 @@ namespace DAL.FileSystem
 			// 1) Initialize the response
 			HistolungResponse response = new HistolungResponse();
 			response.Prediction = "Failure. ";
-			response.Heatmap = Array.Empty<byte>();
+			response.Heatmap = "";
 
 			// 2) Verify the paths and folders
 			try
@@ -265,7 +265,9 @@ namespace DAL.FileSystem
 
 				// Read the prediction and heatmap files
 				response.Prediction = File.ReadAllText(predictionPath);
-				response.Heatmap = File.ReadAllBytes(heatmapPath);
+				response.Heatmap = Convert.ToBase64String(File.ReadAllBytes(heatmapPath));
+				//response.Heatmap = File.ReadAllBytes(heatmapPath);
+
 
 				Console.WriteLine("Prediction and heatmap successfully recovered.");
 			}

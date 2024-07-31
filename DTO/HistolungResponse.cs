@@ -10,6 +10,6 @@ namespace DTO
 	{
 		// For the ANALYSIS RESPONSE
 		public string Prediction { get; set; }
-		public byte[] Heatmap { get; set; }
+		public string Heatmap { get; set; }
 	}
 }

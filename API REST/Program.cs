@@ -14,7 +14,8 @@ builder.Services.AddCors(options =>
 	options.AddPolicy("AllowSpecificOrigin",  // Name of the policy to be used in the controller to enable CORS
 		builder =>
 		{
-			builder.WithOrigins("https://153.109.124.207") 
+			builder.WithOrigins("https://153.109.124.207", 
+											"https://vlbeltbsectra.hevs.ch") 
 				   .AllowAnyHeader()
 				   .AllowAnyMethod();
 		});

@@ -6,10 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API_REST.Controllers
 {
+	/// <inheritdoc/>
 	[Route("api/[controller]")]
 	[ApiController]
-	[EnableCors("AllowSpecificOrigin")]			// Enable CORS (Cross-Origin Resource Sharing) for the controller (for all the methods in the controller) 
-	public class HistolungController : ControllerBase
+	[EnableCors("AllowSpecificOrigin")]         // Enable CORS (Cross-Origin Resource Sharing) for the controller (for all the methods in the controller) 
+	public class HistolungController : ControllerBase, IHistolungController
 	{
 		// A T T R I B U T E S
 		private readonly IHistolungManager _histolungManager;
@@ -24,7 +25,7 @@ namespace API_REST.Controllers
 		// TODO
 		// 1) Methode pour donner un nom depuis swagger, cela va jusqu'à l'IA et commande l'IA de lancer l'analyse pour X image. Ensuite on récupère le résultat dans le output folder.
 		// Avant chaque création de output, il faut clean le folder.
-
+		/// <inheritdoc/>
 		[HttpPost("AnalyseImage")]
 		public IActionResult AnalyseImage([FromBody] HistolungRequest request)
 		{
@@ -36,7 +37,7 @@ namespace API_REST.Controllers
 			HistolungResponse response = _histolungManager.AnalyseImage(request);
 
 			// 2) Verify if the result of the analysis succeeded
-			if (response == null || 
+			if (response == null ||
 				response.Prediction.Contains("Failure"))
 			{
 				return BadRequest("Analysis failed.\n" + response.Prediction);
@@ -50,6 +51,7 @@ namespace API_REST.Controllers
 		}
 
 		// 2) Methode pour récupérer l'image heatmap de l'analyse
+		/// <inheritdoc/>
 		[HttpGet("GetHeatmap")]
 		public IActionResult GetHeatmap()
 		{
@@ -64,7 +66,7 @@ namespace API_REST.Controllers
 			else
 			{
 				// Return the heatmap as a file to the client (image/png format)
-				return File(heatmap, "image/png", "image.png");	 
+				return File(heatmap, "image/png", "image.png");
 			}
 		}
 	}

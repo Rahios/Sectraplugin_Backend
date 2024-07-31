@@ -40,7 +40,18 @@ builder.Services.AddSingleton<IHistolungFS>(hfs => new HistolungFS(DirectoryPath
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Register the Swagger services in the service container to generate the Swagger document
+builder.Services.AddSwaggerGen( c =>
+{
+	// Define the Swagger document to be generated (the metadata of the API)
+	var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+
+	// Define the path to the XML file containing the documentation comments of the API controllers
+	var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+	// Include the XML file in the Swagger document to generate the documentation of the API
+	c.IncludeXmlComments(xmlPath);
+});
 
 var app = builder.Build();
 
@@ -48,7 +59,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
-	app.UseSwaggerUI();
+	// Enable the middleware to serve the generated Swagger as a JSON endpoint (the Swagger document)
+	app.UseSwaggerUI( c =>
+	{
+		c.SwaggerEndpoint("/swagger/v1/swagger.json", "API REST V1");
+		c.RoutePrefix = string.Empty; // Set the Swagger UI at the root URL
+	});
 }
 
 app.UseHttpsRedirection();

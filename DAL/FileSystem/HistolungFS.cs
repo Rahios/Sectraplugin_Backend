@@ -34,6 +34,7 @@ namespace DAL.FileSystem
 		// M E T H O D S
 		// Update the .env file with the new values of the image to analyse
 		// and then re-run the Histolung service
+		// Takes 90 seconds to run the Histolung service and 110 seconds to wait for the output files
 		public HistolungResponse AnalyzeImage(HistolungRequest request)
 		{
 			Console.WriteLine("\nMETHOD AnalyzeImage - Analyzing the image");
@@ -181,6 +182,8 @@ namespace DAL.FileSystem
 			{
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
 				Task task = DockerComposeUpDownAsync(projectDirectory, 90000);
+
+				// 90000 ms = 90 seconds + 11 * 10 seconds = 200 seconds = 3 minutes and 20 seconds
 
 				task.Wait(); // Wait for the task to complete before continuing
 				if (task.IsCompleted)
@@ -408,7 +411,7 @@ namespace DAL.FileSystem
 				Console.Write("Command output: " + output);
 				if (!string.IsNullOrEmpty(error))
 				{
-					Console.WriteLine($"Error running command: {error}");
+					Console.WriteLine($"\nError running command: {error}");
 				}
 				
 				return output;

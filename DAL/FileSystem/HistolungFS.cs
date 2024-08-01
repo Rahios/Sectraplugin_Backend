@@ -56,12 +56,12 @@ namespace DAL.FileSystem
 					response.Prediction += error;
 					throw new Exception(error);
 				}
-				if(!Directory.Exists(outputFolder))
+				if (!Directory.Exists(outputFolder))
 				{
 					string error = "Output folder does not exist.\n";
 					response.Prediction += error;
 					throw new Exception(error);
-				}	
+				}
 				// Check if the .env file exists in the Histolung folder
 				if (!File.Exists(envFilePath))
 				{
@@ -100,12 +100,12 @@ namespace DAL.FileSystem
 				Console.WriteLine("Updating the .env file with the new image name");
 				string envContent = $"WSI_NAME={request.ImageName}\nSIGMA=8\nTAG=v1.0\nGPU_DEVICE_IDS=0";
 				File.WriteAllText(envFilePath, envContent); // Écriture du contenu dans le fichier .env
-				// Write the content to the .env file, overwriting the previous content if it exists
+															// Write the content to the .env file, overwriting the previous content if it exists
 				Console.WriteLine("What SHOULD BE written in the .env file :\n" + envContent + "\n");
 
 				// Read back the content to verify
 				string verifyContent = File.ReadAllText(envFilePath);
-				Console.WriteLine("\nACTUAL Updated .env file content :\n" + verifyContent +"\n");
+				Console.WriteLine("\nACTUAL Updated .env file content :\n" + verifyContent + "\n");
 			}
 			catch (Exception e)
 			{
@@ -224,9 +224,9 @@ namespace DAL.FileSystem
 			try
 			{
 				// recover image name without extension
-				string imageName		= request.ImageName.Split('.')[0];
-				string heatmapPath		= $"{outputFolder}/heatmap_{imageName}.png";
-				string predictionPath	= $"{outputFolder}/predictions.csv";
+				string imageName = request.ImageName.Split('.')[0];
+				string heatmapPath = $"{outputFolder}/heatmap_{imageName}.png";
+				string predictionPath = $"{outputFolder}/predictions.csv";
 
 				Console.WriteLine("Image Name: " + imageName);
 				Console.WriteLine("Full path for heatmap: " + heatmapPath);
@@ -234,7 +234,7 @@ namespace DAL.FileSystem
 				// Verify the filenames of output folder. If there are no files in the folder, wait a bit and try again. Only 6 times.
 				Console.WriteLine("Files in the output folder:");
 				int counter = 0;
-				if(Directory.GetFiles(outputFolder).Length == 0 ||
+				if (Directory.GetFiles(outputFolder).Length == 0 ||
 					counter < 11)
 				{
 					Console.WriteLine("No files found in the output folder. Waiting 10 seconds and trying again.");
@@ -295,7 +295,7 @@ namespace DAL.FileSystem
 				// recover image name with the extension name ".png" 
 				// Scan the folder for the heatmap image and return the name of it
 				string imageName = Directory.GetFiles(outputFolder, "heatmap_*.png").FirstOrDefault();
-				Console.WriteLine("Image Name : "+imageName);
+				Console.WriteLine("Image Name : " + imageName);
 
 				// Check if a file was found
 				if (imageName == null)
@@ -319,6 +319,66 @@ namespace DAL.FileSystem
 			}
 		}
 
+		// Get the last analysis result from the output folder and return it as a HistolungResponse object
+		public HistolungResponse GetLastAnalysis()
+		{
+			Console.WriteLine("\nMETHOD GetLastAnalysis - Getting the last analysis done in the output folder");
+
+			// 1) Initialize the response
+			HistolungResponse response = new HistolungResponse();
+			response.Prediction = "Failure. ";
+			response.Heatmap = "";
+
+			try
+			{
+				// 1) Recover heatmap in the output folder
+				// recover image name with the extension name ".png" 
+				// Scan the folder for the heatmap image and return the name of it
+				string imageName = Directory.GetFiles(outputFolder, "heatmap_*.png").FirstOrDefault();
+				Console.WriteLine("Image Name : " + imageName);
+
+				// Check if a file was found
+				if (imageName == null)
+				{
+					string message = "No heatmap file found in the output folder.";
+					Console.WriteLine(message);
+					throw new FileNotFoundException(message);
+				}
+
+				// Read the heatmap image as a byte array and return it
+				//byte[] heatmap = File.ReadAllBytes($"{outputFolder}/{imageName}");
+				byte[] heatmap = File.ReadAllBytes(imageName);
+				// Convert byte array to base64 string
+				string heatmapBase64 = Convert.ToBase64String(heatmap);
+				response.Heatmap = heatmapBase64;
+
+				// 2) Recover prediction in the output folder
+			    string predictionPath = Directory.GetFiles(outputFolder, "predictions.csv").FirstOrDefault();
+				Console.WriteLine("Prediction Path : " + predictionPath);
+
+				// Check if a file was found
+				if (predictionPath == null)
+				{
+					string message = "No prediction file found in the output folder.";
+					Console.WriteLine(message);
+					throw new FileNotFoundException(message);
+				}
+
+				// Read the prediction file 
+				response.Prediction = File.ReadAllText(predictionPath);
+
+				Console.WriteLine("Heatmap and prediction successfully recovered.");
+				return response;
+
+			}
+			catch (Exception e)
+			{
+				string message = "Error recovering the prediction and heatmap";
+				response.Prediction += message;
+				Console.WriteLine(message + e);
+				return response;
+			}
+		}
 
 		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container
 		private async Task DockerComposeUpDownAsync(string projectDirectory, int msDelay)
@@ -418,6 +478,7 @@ namespace DAL.FileSystem
 			}
 		}
 
+		
 	}
 
 }

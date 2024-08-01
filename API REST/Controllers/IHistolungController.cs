@@ -23,5 +23,11 @@ namespace API_REST.Controllers
 		/// </summary>
 		/// <returns>The last image of any alaysis</returns>
 		IActionResult GetHeatmap();
+
+		/// <summary>
+		/// Gets the last analysis result containing the prediction and the heatmap of the analysis in the output folder.
+		/// </summary>
+		/// <returns>JSON of prediction and heatmap as a string base 64 format</returns>
+		IActionResult GetLastAnalysis();
 	}
 }

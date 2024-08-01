@@ -31,5 +31,10 @@ namespace BLL.Managers
 		{
 			return _histolungFS.GetHeatmap();
 		}
+
+		public HistolungResponse GetLastAnalysis()
+		{
+			return _histolungFS.GetLastAnalysis();
+		}
 	}
 }

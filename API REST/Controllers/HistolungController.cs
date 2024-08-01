@@ -73,5 +73,25 @@ namespace API_REST.Controllers
 				return File(heatmap, "image/png", "image.png");
 			}
 		}
+
+		// 3) Methode pour récuperer le dernier résultat d'analyse dans le dossier output
+		public IActionResult GetLastAnalysis()
+		{
+			// 1) Call the manager to analyse the image
+			HistolungResponse response = _histolungManager.GetLastAnalysis();
+
+			// 2) Verify if the result of the analysis succeeded
+			if (response == null ||
+				response.Prediction.Contains("Failure"))
+			{
+				return BadRequest("Analysis failed.\n" + response.Prediction);
+			}
+			else
+			{
+				return Ok(response);
+				// Return a complex type (object) as a response to the client. 
+				// The object is serialized into JSON format before sending it to the client. 
+			}
+		}
 	}
 }

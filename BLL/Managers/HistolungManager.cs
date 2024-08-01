@@ -36,5 +36,10 @@ namespace BLL.Managers
 		{
 			return _histolungFS.GetLastAnalysis();
 		}
+
+		public string[] GetImagesList()
+		{
+			return _histolungFS.GetImagesList();
+		}
 	}
 }

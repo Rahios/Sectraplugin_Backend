@@ -6,6 +6,7 @@ namespace DAL.Interfaces
 	{
 		global::DTO.HistolungResponse AnalyzeImage(global::DTO.HistolungRequest request);
 		byte[] GetHeatmap();
+		string[] GetImagesList();
 		HistolungResponse GetLastAnalysis();
 	}
 }

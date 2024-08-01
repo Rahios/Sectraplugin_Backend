@@ -20,9 +20,10 @@ namespace DAL.FileSystem
 		private string backendWorkDirPath; // Path to the working directory ("/home/user/appBackend/")
 		private string wsiFolder = "/home/user/appBackend/data/tcga/wsi";
 		private string outputFolder = "/home/user/appBackend/data/outputs";
-		//private string histolungWorkDirPath = "/home/user/appHistolung"; // NE sert a rien, car on n'y a pas accès
 		private string envFilePath = "/home/user/appBackend/.env";
 		private string projectDirectory = "/home/user/appBackend/histo_lung";
+		private int delayHistolungService					= 50000; // 50 seconds
+		private int delayCounterLoopOutputFolder	= 15; // 10 seconds each loop
 
 		// C O N S T R U C T O R
 		public HistolungFS(string basePath)
@@ -181,9 +182,8 @@ namespace DAL.FileSystem
 			try
 			{
 				// Restart the Histolung service with the Docker.DotNet API and wait for it to finish before continuing
-				Task task = DockerComposeUpDownAsync(projectDirectory, 90000);
+				Task task = DockerComposeUpDownAsync(projectDirectory,  delayHistolungService);
 
-				// 90000 ms = 90 seconds + 11 * 10 seconds = 200 seconds = 3 minutes and 20 seconds
 
 				task.Wait(); // Wait for the task to complete before continuing
 				if (task.IsCompleted)
@@ -231,11 +231,11 @@ namespace DAL.FileSystem
 				Console.WriteLine("Image Name: " + imageName);
 				Console.WriteLine("Full path for heatmap: " + heatmapPath);
 
-				// Verify the filenames of output folder. If there are no files in the folder, wait a bit and try again. Only 6 times.
+				// Verify the filenames of output folder. If there are no files in the folder, wait a bit and try again. 
 				Console.WriteLine("Files in the output folder:");
 				int counter = 0;
 				if (Directory.GetFiles(outputFolder).Length == 0 ||
-					counter < 11)
+					counter < delayCounterLoopOutputFolder)
 				{
 					Console.WriteLine("No files found in the output folder. Waiting 10 seconds and trying again.");
 					Task.Delay(10000).Wait(); // Wait 10 seconds
@@ -378,6 +378,25 @@ namespace DAL.FileSystem
 				Console.WriteLine(message + e);
 				return response;
 			}
+		}
+
+		// Get the list of images in the /wsi folder to analyze and return it as a string array
+		public string[] GetImagesList()
+		{
+			Console.WriteLine("\nMETHOD GetImagesList - Getting the list of images to analyze in the input folder");
+			// 1) Scan the WSI folder
+			string[] imageList = Directory.GetFiles(wsiFolder);
+			Console.WriteLine("Number of images in the WSI folder: " + imageList.Length);
+
+			// 2) Only return the file names without the full path
+			foreach (string image in imageList)
+			{
+				Console.WriteLine("Image full path: " + image);
+				imageList[Array.IndexOf(imageList, image)] = image.Split('/').Last(); // Keep only the file name
+				Console.WriteLine("Image name: " + imageList[Array.IndexOf(imageList, image)]);
+			}
+
+			return imageList;
 		}
 
 		// Run the Histolung service with Docker.DotNet API that allows to interact with the Docker daemon outside of the container

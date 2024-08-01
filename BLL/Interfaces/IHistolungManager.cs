@@ -6,6 +6,7 @@ namespace BLL.Interfaces
 	{
 		global::DTO.HistolungResponse AnalyseImage(global::DTO.HistolungRequest request);
 		byte[] GetHeatmap();
+		string[] GetImagesList();
 		HistolungResponse GetLastAnalysis();
 	}
 }

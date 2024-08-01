@@ -95,5 +95,27 @@ namespace API_REST.Controllers
 				// The object is serialized into JSON format before sending it to the client. 
 			}
 		}
+
+		// 4) Methode pour récuperer la liste des images disponibles à l'analyse
+		/// <inheritdoc/>
+		[HttpGet("GetImagesList")]
+		public IActionResult GetImagesList()
+		{
+			// 1) Call the manager to get the list of images
+			string[] imagesList = _histolungManager.GetImagesList();
+
+			// 2) Verify if the list of images was found
+			if (imagesList == null)
+			{
+				return BadRequest("Images list not found.");
+			}
+			else
+			{
+				return Ok(imagesList);
+				// Return a complex type (object) as a response to the client. 
+				// The object is serialized into JSON format before sending it to the client. 
+			}
+		}
+
 	}
 }

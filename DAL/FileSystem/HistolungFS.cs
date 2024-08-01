@@ -389,13 +389,15 @@ namespace DAL.FileSystem
 			Console.WriteLine("Number of images in the WSI folder: " + imageList.Length);
 
 			// 2) Only return the file names without the full path
-			// 2) Only return the file names without the full path
 			for (int i = 0; i < imageList.Length; i++)
 			{
 				Console.WriteLine("Image full path: " + imageList[i]);
 				imageList[i] = Path.GetFileName(imageList[i]); // Keep only the file name
 				Console.WriteLine("Image name: " + imageList[i]);
 			}
+
+			// 3) sort the list of images alphabetically
+			Array.Sort(imageList);
 
 			return imageList;
 		}

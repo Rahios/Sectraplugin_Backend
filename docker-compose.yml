@@ -28,4 +28,15 @@ services:
         - /home/elias/tbSectra/ai/histo_lung/.env:/home/user/appBackend/.env:rw
         # Need this to execute docker inside the container
         - /var/run/docker.sock:/var/run/docker.sock
+
+    # Shared networ for Backend & Frontend
+    networks:
+     - SectraNet
+ 
+
+# Bridge network for the containers to communicate between them and with the host machine 
+networks:
+    SectraNet:
+        driver: bridge    
+    
         

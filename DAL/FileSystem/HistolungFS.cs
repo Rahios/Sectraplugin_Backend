@@ -266,6 +266,8 @@ namespace DAL.FileSystem
 					throw new FileNotFoundException("Heatmap file not found.", heatmapPath);
 				}
 
+				// if the files are found, clean the prediction from the failure message
+				response.Prediction = "";
 				// Read the prediction and heatmap files
 				response.Prediction = File.ReadAllText(predictionPath);
 				response.Heatmap = Convert.ToBase64String(File.ReadAllBytes(heatmapPath));
@@ -364,6 +366,8 @@ namespace DAL.FileSystem
 					throw new FileNotFoundException(message);
 				}
 
+				// if the files are found, clean the prediction from the failure message
+				response.Prediction = "";
 				// Read the prediction file 
 				response.Prediction = File.ReadAllText(predictionPath);
 

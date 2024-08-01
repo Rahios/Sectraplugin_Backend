@@ -234,14 +234,14 @@ namespace DAL.FileSystem
 				// Verify the filenames of output folder. If there are no files in the folder, wait a bit and try again. 
 				Console.WriteLine("Files in the output folder:");
 				int counter = 0;
-				if (Directory.GetFiles(outputFolder).Length < 2 ||
+				while (Directory.GetFiles(outputFolder).Length < 2 ||
 					counter < delayCounterLoopOutputFolder)
 				{
 					Console.WriteLine("No files found in the output folder. Waiting 10 seconds and trying again.");
 					Task.Delay(10000).Wait(); // Wait 10 seconds
 					counter++;
 				}
-				else
+				if (delayCounterLoopOutputFolder == counter)
 				{
 					Console.WriteLine("No files found in the output folder after 11 tries. Exiting.");
 					response.Prediction += "No files found in the output folder after 11 tries.";

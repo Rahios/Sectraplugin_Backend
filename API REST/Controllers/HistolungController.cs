@@ -75,6 +75,8 @@ namespace API_REST.Controllers
 		}
 
 		// 3) Methode pour récuperer le dernier résultat d'analyse dans le dossier output
+		/// <inheritdoc/>
+		[HttpGet("GetLatestAnalysis")]
 		public IActionResult GetLastAnalysis()
 		{
 			// 1) Call the manager to analyse the image

@@ -235,19 +235,19 @@ namespace DAL.FileSystem
 				Console.WriteLine("Files in the output folder:");
 				int counter = 0;
 				int numberOfFiles = Directory.GetFiles(outputFolder).Length;
-				while (numberOfFiles < 2 ||
-					counter < delayCounterLoopOutputFolder)
+				while (	numberOfFiles < 2 &&
+							counter < delayCounterLoopOutputFolder)
 				{
 					Console.WriteLine("No files found in the output folder. Waiting 10 seconds and trying again.");
 					Task.Delay(10000).Wait(); // Wait 10 seconds
 					numberOfFiles = Directory.GetFiles(outputFolder).Length;
 					counter++;
 				}
-				if (delayCounterLoopOutputFolder == counter)
+				if (numberOfFiles < 2)
 				{
-					Console.WriteLine("No files found in the output folder after 11 tries. Exiting.");
-					response.Prediction += "No files found in the output folder after 11 tries.";
-					throw new Exception("No files found in the output folder after 11 tries.");
+					Console.WriteLine($"No files found in the output folder after ${delayCounterLoopOutputFolder} tries. Exiting.");
+					response.Prediction += $"No files found in the output folder after ${delayCounterLoopOutputFolder} tries.";
+					throw new Exception($"No files found in the output folder after ${delayCounterLoopOutputFolder} tries.");
 				}
 				foreach (string file in Directory.GetFiles(outputFolder))
 				{

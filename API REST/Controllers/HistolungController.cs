@@ -105,7 +105,7 @@ namespace API_REST.Controllers
 			string[] imagesList = _histolungManager.GetImagesList();
 
 			// 2) Verify if the list of images was found
-			if (imagesList == null)
+			if( imagesList.Equals(null) )
 			{
 				return BadRequest("Images list not found.");
 			}

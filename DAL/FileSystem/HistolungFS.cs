@@ -22,8 +22,8 @@ namespace DAL.FileSystem
 		private string outputFolder = "/home/user/appBackend/data/outputs";
 		private string envFilePath = "/home/user/appBackend/.env";
 		private string projectDirectory = "/home/user/appBackend/histo_lung";
-		private int delayHistolungService					= 50000; // 50 seconds
-		private int delayCounterLoopOutputFolder	= 15; // 10 seconds each loop
+		private int delayHistolungService					= 90000; // 90 seconds
+		private int delayCounterLoopOutputFolder	= 11; // 10 seconds each loop
 
 		// C O N S T R U C T O R
 		public HistolungFS(string basePath)

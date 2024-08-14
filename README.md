@@ -70,7 +70,7 @@ Use the provided scripts to build and run the Docker containers:
   ./run-docker-compose-AI-BACKEND.sh
   ```
 
-### 3. Automate Deployment (Optional)
+### 3. Automated Deployment (easier to use)
 
 For automated deployment, use the following script which will:
 

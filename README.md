@@ -84,7 +84,7 @@ For automated deployment, use the following script which will:
 
 ### 4. Access the API
 
-After deployment, the API will be available at: [Backend API] (https://153.109.124.207:8087/index.html)
+After deployment, the API will be available at: [Backend API](https://153.109.124.207:8087/index.html)
 
 
 ## Additional Documentation

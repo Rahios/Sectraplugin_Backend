@@ -17,7 +17,7 @@ The backend solution consists of multiple projects, each serving a specific role
 
 Here's an illustration of how these projects fit into the overall architecture:
 
-![ASP.NET Core Project Structure](./images/aspnet_core_project.png)
+![ASP.NET Core Project Structure](./images/Architecture.png)
 
 ## Dependencies and Prerequisites
 

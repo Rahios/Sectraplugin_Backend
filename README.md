@@ -79,16 +79,13 @@ For automated deployment, use the following script which will:
 3. Restart the Docker Compose services.
 
 ```bash
-./automate-deployment.sh
+./rebuild-backend-deploy.sh
 ```
 
 ### 4. Access the API
 
-After deployment, the API will be available at:
+After deployment, the API will be available at: [Backend API] (https://153.109.124.207:8087/index.html)
 
-```bash
-https://localhost:8087/swagger
-```
 
 ## Additional Documentation
 
